@@ -2,11 +2,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Ai {
-    private static final int MAX_DEPTH = 5;
+    private static final int MAX_DEPTH = 3;
     private static final int WIN_SCORE = 10000;
     private static final int LOSE_SCORE = -10000;
 
     public int minimax(Board board, int depth, boolean isMaximizingPlayer, int alpha, int beta) {
+        // Vérifier si un joueur a une pièce inarrêtable
+//        for (Position pos : getAllPawnsPositions(board, isMaximizingPlayer)) {
+//            if (isUnstoppable(board, pos)) {
+//                return isMaximizingPlayer ? WIN_SCORE : LOSE_SCORE;
+//            }
+//        }
+
         if (depth == MAX_DEPTH || isGameOver(board)) {
             return evaluate(board, isMaximizingPlayer);
         }
@@ -92,6 +99,37 @@ public class Ai {
             }
         }
         return score;
+    }
+
+    private boolean isUnstoppable(Board board, Position position) {
+        int row = position.getRow();
+        int col = position.getCol();
+        Pawn pawn = board.getPawnAt(position);
+        if (pawn == null) return false;
+
+        boolean isWhite = pawn.isWhite();
+        int direction = isWhite ? -1 : 1;
+
+        // Check if the pawn is in the opponent's half
+        if ((isWhite && row < 4) || (!isWhite && row > 3)) {
+            return false;
+        }
+
+        // Check if there is an unstoppable path
+        for (int i = row + direction; isValidPosition(i, col); i += direction) {
+            boolean pathBlocked = false;
+            for (int j = col - 1; j <= col + 1; j++) {
+                if (isValidPosition(i, j) && board.getPawnAt(new Position(i, j)) != null && board.getPawnAt(new Position(i, j)).isWhite() != isWhite) {
+                    pathBlocked = true;
+                    break;
+                }
+            }
+            if (!pathBlocked) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean isProtected(Board board, Position position) {

@@ -75,7 +75,7 @@ public class Main {
         return board.getAvailableMoves(from).contains(to);
     }
 
-    private static void aiMove(boolean isWhite) {
+    public static String aiMove(boolean isWhite) {
         String bestMove = "";
         int maxEval = Integer.MIN_VALUE;
 
@@ -95,8 +95,8 @@ public class Main {
         Position from = parsePosition(parts[0]);
         Position to = parsePosition(parts[1]);
         board.movePawn(from, to);
-
         System.out.println("AI move: " + bestMove);
+        return bestMove.toUpperCase();
     }
 
     private static String positionToString(Position pos) {
