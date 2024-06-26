@@ -57,6 +57,7 @@ public class Ai {
     private int evaluate(Board board, boolean isMaximizingPlayer) {
         int scoreMax = 0;
         int scoreMin =0;
+        int counterMaxPieces=0, counterMinPieces=0;
         if (isGameOver(board)) {
             for (int col = 0; col < 8; col++) {
                 if (board.getPawnAt(new Position(0, col)) != null && !board.getPawnAt(new Position(0, col)).isWhite()) {
@@ -68,40 +69,43 @@ public class Ai {
             }
         }
 
-        for (Position pos : getAllPawnsPositions(board, true)) {
+        for (Position pos : getAllPawnsPositions(board, isMaximizingPlayer)) {
             Pawn pawn = board.getPawnAt(pos);
+
             if (pawn != null) {
                 // Avancement des pions
                 scoreMax += pawn.isWhite() ? pos.getRow()*3 : (7 - pos.getRow());
-
+                counterMaxPieces++;
                 // Protection des pions
-//                if (isProtectedSquare(board, pos, true)) {
-//                    scoreMax += 1;
-//                }
+                if (isProtectedSquare(board, pos, true)) {
+                    scoreMax += 1;
+                }
 
-                // Contrôle des cases centrales
-//                if (pos.getCol() == 0 || pos.getCol() == 7 || pos.getCol() == 3 || pos.getCol() == 4) {
-//                    scoreMax += 2;
-//                }
+/*                // Contrôle des cases centrales
+                if (pos.getCol() <= 1 || pos.getCol() == 7 || pos.getCol() == 3 || pos.getCol() == 4) {
+                    scoreMax += 2;
+                }*/
 
             }
         }
-        for (Position pos : getAllPawnsPositions(board, false)) {
+        scoreMax+=counterMaxPieces*50;
+        for (Position pos : getAllPawnsPositions(board, isMaximizingPlayer)) {
             Pawn pawn = board.getPawnAt(pos);
             if (pawn != null) {
                 // Avancement des pions
                 scoreMin += pawn.isWhite() ? pos.getRow() : (7 - pos.getRow())*3;
-
+                counterMinPieces++;
                 // Protection des pions
-//                if (isProtectedSquare(board, pos, false)) {
-//                    scoreMin += 1;
-//                }
+                if (isProtectedSquare(board, pos, false)) {
+                    scoreMin += 1;
+                }
 
-//                if (pos.getCol() == 0 || pos.getCol() == 7 || pos.getCol() == 3 || pos.getCol() == 4) {
-//                    scoreMax += 2;
-//                }
+/*                if (pos.getCol() == 0 || pos.getCol() == 7 || pos.getCol() == 3 || pos.getCol() == 4) {
+                    scoreMax += 2;
+                }*/
             }
         }
+        scoreMin+=counterMinPieces*50;
         return scoreMax - scoreMin;
     }
 
