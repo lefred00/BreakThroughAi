@@ -1,3 +1,4 @@
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.List;
@@ -11,20 +12,20 @@ public class Main {
         boolean isWhitePlayer = chooseColor();
         boolean gameOver = false;
 
-        while (!gameOver) {
-            if (isWhitePlayer) {
-                playerMove(true);
-                gameOver = checkGameOver();
-                if (gameOver) break;
-                aiMove(false);
-            } else {
-                aiMove(true);
-                gameOver = checkGameOver();
-                if (gameOver) break;
-                playerMove(false);
-            }
-            gameOver = checkGameOver();
-        }
+//        while (!gameOver) {
+//            if (isWhitePlayer) {
+//                playerMove(true);
+//                gameOver = checkGameOver();
+//                if (gameOver) break;
+//                aiMove(false);
+//            } else {
+//                aiMove(true);
+//                gameOver = checkGameOver();
+//                if (gameOver) break;
+//                playerMove(false);
+//            }
+//            gameOver = checkGameOver();
+//        }
         System.out.println("Game Over!");
     }
 
@@ -34,31 +35,35 @@ public class Main {
         return color.equals("white");
     }
 
-    private static void playerMove(boolean isWhite) {
-        while (true) {
-            System.out.println("Enter your move (e.g., e2 e3): ");
-            String move = scanner.nextLine().trim();
-            String[] parts = move.split(" ");
-            if (parts.length != 2) {
-                System.out.println("Invalid input format. Please use 'e2 e3' format.");
-                continue;
-            }
-
-            Position from = parsePosition(parts[0]);
-            Position to = parsePosition(parts[1]);
-
-            if (from == null || to == null) {
-                System.out.println("Invalid move format. Please use 'e2 e3' format.");
-                continue;
-            }
-
-            if (isValidPlayerMove(from, to, isWhite)) {
-                board.movePawn(from, to);
-                break;
-            } else {
-                System.out.println("Invalid move. Try again.");
-            }
-        }
+    public static void playerMove(boolean isWhite,String move) {
+//        while (true) {
+//            System.out.println("Enter your move (e.g., e2 e3): ");
+//            String move = scanner.nextLine().trim();
+//            String[] parts = move.split(" ");
+//            if (parts.length != 2) {
+//                System.out.println("Invalid input format. Please use 'e2 e3' format.");
+//                continue;
+//            }
+//
+//            Position from = parsePosition(parts[0]);
+//            Position to = parsePosition(parts[1]);
+//
+//            if (from == null || to == null) {
+//                System.out.println("Invalid move format. Please use 'e2 e3' format.");
+//                continue;
+//            }
+//
+//            if (isValidPlayerMove(from, to, isWhite)) {
+//                board.movePawn(from, to);
+//                break;
+//            } else {
+//                System.out.println("Invalid move. Try again.");
+//            }
+//        }
+        String[] parts = move.split(" ");
+        Position from = parsePosition(parts[0]);
+        Position to = parsePosition(parts[1]);
+        board.movePawn(from, to);
     }
 
     private static Position parsePosition(String pos) {
@@ -78,18 +83,23 @@ public class Main {
     public static String aiMove(boolean isWhite) {
         String bestMove = "";
         int maxEval = Integer.MIN_VALUE;
-
-        for (Position pos : getAllPawnsPositions(isWhite)) {
+        List<Position> allPawnsPositions = getAllPawnsPositions(isWhite);
+        outerLoop:
+        for (int i = allPawnsPositions.size() - 1; i >= 0; i--) {
+            Position pos = allPawnsPositions.get(i);
             for (Position move : board.getAvailableMoves(pos)) {
                 Board newBoard = new Board(board); // Assurez-vous de copier correctement le plateau
                 newBoard.movePawn(pos, move);
-                int eval = minimax.minimax(newBoard, 0, !isWhite, Integer.MIN_VALUE, Integer.MAX_VALUE);
-                if (eval > maxEval) {
+                int eval = minimax.minimax(newBoard, 0, false, Integer.MIN_VALUE, Integer.MAX_VALUE);
+                if (eval >= maxEval) {
                     maxEval = eval;
                     bestMove = positionToString(pos) + " " + positionToString(move);
                 }
+                if(eval == 10000)
+                    break outerLoop;
             }
         }
+        //System.out.println(maxEval);
 
         String[] parts = bestMove.split(" ");
         Position from = parsePosition(parts[0]);

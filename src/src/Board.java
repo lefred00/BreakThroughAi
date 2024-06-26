@@ -11,7 +11,7 @@ public class Board {
     }
 
     private void setupInitialPosition() {
-        // Placer les pions blancs
+//        // Placer les pions blancs
         for (int col = 0; col < SIZE; col++) {
             board[0][col] = new Pawn(new Position(0, col), true);
             board[1][col] = new Pawn(new Position(1, col), true);
@@ -22,6 +22,39 @@ public class Board {
             board[6][col] = new Pawn(new Position(6, col), false);
             board[7][col] = new Pawn(new Position(7, col), false);
         }
+        // Place the black pawns
+//        board[7][0] = new Pawn(new Position(7, 0), false);
+//        board[7][1] = new Pawn(new Position(7, 1), false);
+//        board[7][2] = new Pawn(new Position(7, 2), false);
+//        board[7][3] = new Pawn(new Position(7, 3), false);
+//        board[7][4] = new Pawn(new Position(7, 4), false);
+//        board[4][1] = new Pawn(new Position(4, 1), false);
+//        board[6][1] = new Pawn(new Position(6, 1), false);
+//        board[6][2] = new Pawn(new Position(6, 2), false);
+//        board[6][3] = new Pawn(new Position(6, 3), false);
+//        board[6][4] = new Pawn(new Position(6, 4), false);
+//        board[5][5] = new Pawn(new Position(5, 5), false);
+//        board[2][3] = new Pawn(new Position(2, 3), false);
+//        board[5][7] = new Pawn(new Position(5, 7), false);
+//        board[2][7] = new Pawn(new Position(2, 7), false);
+//
+//        // Place the red pawns
+//        board[0][0] = new Pawn(new Position(0, 0), true);
+//        board[0][1] = new Pawn(new Position(0, 1), true);
+//        board[0][2] = new Pawn(new Position(0, 2), true);
+//        board[0][3] = new Pawn(new Position(0, 3), true);
+//        board[0][4] = new Pawn(new Position(0, 4), true);
+//
+//        board[0][6] = new Pawn(new Position(0, 6), true);
+//
+//        board[1][0] = new Pawn(new Position(1, 0), true);
+//        board[1][1] = new Pawn(new Position(1, 1), true);
+//        board[1][2] = new Pawn(new Position(1, 2), true);
+//        board[1][5] = new Pawn(new Position(1, 5), true);
+//        board[6][7] = new Pawn(new Position(6, 7), true);
+//
+//        board[2][6] = new Pawn(new Position(2, 6), true);
+
     }
 
     public Pawn getPawnAt(Position position) {
@@ -79,6 +112,23 @@ public class Board {
                     this.board[row][col] = new Pawn(new Position(pawn.getPosition().getRow(), pawn.getPosition().getCol()), pawn.isWhite());
                 }
             }
+        }
+    }
+    // Method to print the board
+    public void printBoard() {
+        for (int row = 0; row < SIZE; row++) {
+            for (int col = 0; col < SIZE; col++) {
+                Pawn pawn = board[row][col];
+                if (pawn == null) {
+                    System.out.print(" ");
+                } else if (pawn.isWhite()) {
+                    System.out.print("w");
+                } else {
+                    System.out.print("b");
+                }
+                System.out.print(" ");
+            }
+            System.out.println();
         }
     }
 }

@@ -1,5 +1,7 @@
 import java.io.*;
 import java.net.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 class Client {
@@ -85,7 +87,26 @@ class Client {
                     input.read(aBuffer,0,size);
 
                     String s = new String(aBuffer);
+                    // Expression régulière pour trouver les positions
+                    Pattern pattern = Pattern.compile("[A-Ha-h][1-8]");
+                    Matcher matcher = pattern.matcher(s);
+
+                    // StringBuilder pour construire le résultat
+                    StringBuilder result = new StringBuilder();
+
+                    while (matcher.find()) {
+                        // Ajouter l'expression trouvée en minuscules
+                        if (result.length() > 0) {
+                            result.append(" ");
+                        }
+                        result.append(matcher.group().toLowerCase());
+                    }
+
+                    // Convertir StringBuilder en String
+                    String finalResult = result.toString();
+
                     System.out.println("Dernier coup :"+ s);
+                    Main.playerMove(!isRed,finalResult);
                     System.out.println("Entrez votre coup : ");
                     String move = null;
                     //move = console.readLine();
