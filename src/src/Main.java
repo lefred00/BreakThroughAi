@@ -99,13 +99,13 @@ public class Main {
                         bestEval = eval;
                         bestMove = positionToString(pos) + " " + positionToString(move);
                     }
-                    if (eval >= 9999) break outerLoop;
+                    if (eval >= 10000*2) break outerLoop;
                 } else {
                     if (eval < bestEval) {
                         bestEval = eval;
                         bestMove = positionToString(pos) + " " + positionToString(move);
                     }
-                    if (eval <= -9999) break outerLoop;
+                    if (eval <= -10000*2) break outerLoop;
                 }
                 if (System.currentTimeMillis() - minimax.startTime > Ai.TIME_LIMIT) {
                     break outerLoop;

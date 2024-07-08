@@ -12,11 +12,14 @@ public class Ai {
             return evaluate(board, isMaximizingPlayer); // Retourner une évaluation approximative si le temps est écoulé
         }
         if (isGameOver(board)) {
-            return isMaximizingPlayer ? LOSE_SCORE : WIN_SCORE;
+            return isMaximizingPlayer ? LOSE_SCORE*2 : WIN_SCORE*2;
         }
-        if (isGameOverfor(board, !isMaximizingPlayer)) {
-            return isMaximizingPlayer ? LOSE_SCORE + correction : WIN_SCORE + correction;
-        }
+//        if (isGameOverIn1(board, !isMaximizingPlayer)) {
+//            return isMaximizingPlayer ? LOSE_SCORE + correction*10 : WIN_SCORE + correction*10;
+//        }
+//        if (isGameOverIn2(board, !isMaximizingPlayer)) {
+//            return isMaximizingPlayer ? LOSE_SCORE + correction*20 : WIN_SCORE + correction*20;
+//        }
 
         if (depth == MAX_DEPTH) {
             return evaluate(board, isMaximizingPlayer) + correction;
@@ -69,6 +72,20 @@ public class Ai {
         int blackScore = 0;
         boolean whiteWin = false;
 
+        if(isGameOverIn1(board, isMaximizingPlayer)) {
+            return isMaximizingPlayer ? WIN_SCORE : LOSE_SCORE;
+        }
+        if(isGameOverIn1(board, !isMaximizingPlayer)) {
+            return !isMaximizingPlayer ? WIN_SCORE : LOSE_SCORE;
+        }
+        if(isGameOverIn2(board, isMaximizingPlayer)) {
+            return isMaximizingPlayer ? WIN_SCORE : LOSE_SCORE;
+        }
+        if(isGameOverIn2(board, !isMaximizingPlayer)) {
+            return !isMaximizingPlayer ? WIN_SCORE : LOSE_SCORE;
+        }
+
+
         for (Position pos : getAllPawnsPositions(board, true)) {
             Pawn pawn = board.getPawnAt(pos);
             if (pawn != null) {
@@ -99,7 +116,7 @@ public class Ai {
 //            return WIN_SCORE;
 
 
-        return (whiteScore - blackScore) + (nbWhite - nbBlack) * 100;
+        return ((whiteScore - blackScore) + (nbWhite - nbBlack) * 100)/10;
     }
 
 
@@ -158,16 +175,34 @@ public class Ai {
         return false;
     }
 
-    private boolean isGameOverfor(Board board, boolean forWhite) {
+    private boolean isGameOverIn2(Board board, boolean forWhite) {
         for (Position pos : getAllPawnsPositions(board, forWhite)) {
             Pawn pawn = board.getPawnAt(pos);
             if (pawn != null) {
                 if (forWhite) {
-                    if (pos.getRow() > 4 && isWinningPawn(board, pos, true)) {
+                    if (pos.getRow() == 5 && isWinningPawn(board, pos, true)) {
                         return true;
                     }
                 } else {
-                    if (pos.getRow() < 3 && isWinningPawn(board, pos, false)) {
+                    if (pos.getRow() == 2 && isWinningPawn(board, pos, false)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isGameOverIn1(Board board, boolean forWhite) {
+        for (Position pos : getAllPawnsPositions(board, forWhite)) {
+            Pawn pawn = board.getPawnAt(pos);
+            if (pawn != null) {
+                if (forWhite) {
+                    if (pos.getRow() == 6 && isWinningPawn(board, pos, true)) {
+                        return true;
+                    }
+                } else {
+                    if (pos.getRow() == 1 && isWinningPawn(board, pos, false)) {
                         return true;
                     }
                 }
