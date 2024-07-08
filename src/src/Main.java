@@ -1,7 +1,5 @@
 import java.sql.SQLOutput;
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.List;
+import java.util.*;
 
 public class Main {
     private static final Scanner scanner = new Scanner(System.in);
@@ -35,7 +33,7 @@ public class Main {
         return color.equals("white");
     }
 
-    public static void playerMove(boolean isWhite,String move) {
+    public static void playerMove(boolean isWhite, String move) {
 //        while (true) {
 //            System.out.println("Enter your move (e.g., e2 e3): ");
 //            String move = scanner.nextLine().trim();
@@ -81,57 +79,42 @@ public class Main {
     }
 
     public static String aiMove(boolean isWhite) {
+        minimax.startTime = System.currentTimeMillis();
+        int correction = isWhite ? -1 : 1;
         String bestMove = "";
-        int maxEval = Integer.MIN_VALUE;
-        int minEval = Integer.MAX_VALUE;
-        List<Position> allPawnsPositions;
-        if(isWhite) {
-            allPawnsPositions = getAllPawnsPositions(true);
-        }
-        else{
-            allPawnsPositions = getAllPawnsPositions(false);
-        }
-        if (isWhite) {
-            // Parcourir les positions de la fin au début pour les pions blancs
-            outerLoop:
-            for (int i = allPawnsPositions.size() - 1; i >= 0; i--) {
-                Position pos = allPawnsPositions.get(i);
-                for (Position move : board.getAvailableMoves(pos)) {
-                    Board newBoard = new Board(board); // Assurez-vous de copier correctement le plateau
-                    newBoard.movePawn(pos, move);
-                    int eval = minimax.minimax(newBoard, 0, false, Integer.MIN_VALUE, Integer.MAX_VALUE);
-                    if (eval >= maxEval) {
-                        maxEval = eval;
-                        bestMove = positionToString(pos) + " " + positionToString(move);
-                    }
-                    if (eval == 10000) // WIN_SCORE remplacez par la constante correcte
-                        break outerLoop;
-                }
-            }
-        } else {
-            // Parcourir les positions du début à la fin pour les pions noirs
-            outerLoop:
-            for (int i = 0; i < allPawnsPositions.size(); i++) {
-                Position pos = allPawnsPositions.get(i);
-                for (Position move : board.getAvailableMoves(pos)) {
-                    Board newBoard = new Board(board); // Assurez-vous de copier correctement le plateau
-                    newBoard.movePawn(pos, move);
-                    int eval = minimax.minimax(newBoard, 0, true, Integer.MIN_VALUE, Integer.MAX_VALUE);
-                    if (eval <= minEval) {
-                        minEval = eval;
-                        bestMove = positionToString(pos) + " " + positionToString(move);
-                    }
-                    if (eval == -10000) // LOSE_SCORE remplacez par la constante correcte
-                        break outerLoop;
-                }
-            }
-        }
+        int bestEval = isWhite ? Integer.MIN_VALUE : Integer.MAX_VALUE;
 
+        List<Position> allPawnsPositions = getAllPawnsPositions(isWhite);
+
+        outerLoop:
+        for (Position pos : allPawnsPositions) {
+            List<Position> availableMoves = board.getAvailableMoves(pos);
+
+            for (Position move : availableMoves) {
+                Board newBoard = new Board(board); // Assurez-vous de copier correctement le plateau
+                newBoard.movePawn(pos, move);
+                int eval = minimax.minimax(newBoard, 0, !isWhite, Integer.MIN_VALUE, Integer.MAX_VALUE,correction);
+                if (isWhite) {
+                    if (eval > bestEval) {
+                        bestEval = eval;
+                        bestMove = positionToString(pos) + " " + positionToString(move);
+                    }
+                    if (eval >= 9999) break outerLoop;
+                } else {
+                    if (eval < bestEval) {
+                        bestEval = eval;
+                        bestMove = positionToString(pos) + " " + positionToString(move);
+                    }
+                    if (eval <= -9999) break outerLoop;
+                }
+                if (System.currentTimeMillis() - minimax.startTime > Ai.TIME_LIMIT) {
+                    break outerLoop;
+                }
+            }
+        }
+        //minimax.setTranspositionTable(new HashMap<>());
         // Effectuer le mouvement sur le plateau principal
-        String[] parts = bestMove.split(" ");
-        Position from = parsePosition(parts[0]);
-        Position to = parsePosition(parts[1]);
-        board.movePawn(from, to);
+        playerMove(isWhite, bestMove);
         System.out.println("AI move: " + bestMove);
         return bestMove.toUpperCase();
     }
@@ -167,6 +150,7 @@ public class Main {
                 }
             }
         }
+        Collections.shuffle(positions);
         return positions;
     }
 }

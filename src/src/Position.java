@@ -37,4 +37,15 @@ public class Position {
                 ", col=" + col +
                 '}';
     }
+    public Position getForwardPosition(int direction) {
+        return new Position(this.row + direction, this.col);
+    }
+
+    public Position getForwardRightPosition(int direction) {
+        return new Position(this.row + direction, this.col + 1);
+    }
+
+    public Position getForwardLeftPosition(int direction) {
+        return new Position(this.row + direction, this.col - 1);
+    }
 }

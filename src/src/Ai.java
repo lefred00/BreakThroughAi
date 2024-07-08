@@ -1,117 +1,107 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Ai {
     private static final int MAX_DEPTH = 4;
     private static final int WIN_SCORE = 10000;
     private static final int LOSE_SCORE = -10000;
+    public long startTime;
+    public static final long TIME_LIMIT = 50000; // Limite de temps en millisecondes (1 seconde)
 
-    public int minimax(Board board, int depth, boolean isMaximizingPlayer, int alpha, int beta) {
-        if (depth == MAX_DEPTH || isGameOver(board)) {
-            return evaluate(board, isMaximizingPlayer);
+    public int minimax(Board board, int depth, boolean isMaximizingPlayer, int alpha, int beta, int correction) {
+        if (System.currentTimeMillis() - startTime > TIME_LIMIT) {
+            return evaluate(board, isMaximizingPlayer); // Retourner une évaluation approximative si le temps est écoulé
         }
+        if (isGameOver(board)) {
+            return isMaximizingPlayer ? LOSE_SCORE : WIN_SCORE;
+        }
+        if (isGameOverfor(board, !isMaximizingPlayer)) {
+            return isMaximizingPlayer ? LOSE_SCORE + correction : WIN_SCORE + correction;
+        }
+
+        if (depth == MAX_DEPTH) {
+            return evaluate(board, isMaximizingPlayer) + correction;
+        }
+        List<Position> allPawnsPositions = getAllPawnsPositions(board, isMaximizingPlayer);
 
         if (isMaximizingPlayer) {
             int maxEval = Integer.MIN_VALUE;
             outerLoop:
-            for (Position pos : getAllPawnsPositions(board, true)) {
-                for (Position move : board.getAvailableMoves(pos)) {
+            for (Position pos : allPawnsPositions) {
+                List<Position> availableMoves = board.getAvailableMoves(pos);
+                for (Position move : availableMoves) {
                     Board newBoard = new Board(board);
                     newBoard.movePawn(pos, move);
-                    int eval = minimax(newBoard, depth + 1, false, alpha, beta);
+
+                    int eval = minimax(newBoard, depth + 1, false, alpha, beta, correction);
                     maxEval = Math.max(maxEval, eval);
                     alpha = Math.max(alpha, eval);
                     if (beta <= alpha) {
-                        break  outerLoop; // Beta cut-off
+                        break outerLoop; // Beta cut-off
                     }
                 }
             }
-            return maxEval-1;
+            return maxEval + correction;
         } else {
             int minEval = Integer.MAX_VALUE;
             outerLoop:
-            for (Position pos : getAllPawnsPositions(board, false)) {
-                for (Position move : board.getAvailableMoves(pos)) {
+            for (Position pos : allPawnsPositions) {
+                List<Position> availableMoves = board.getAvailableMoves(pos);
+                for (Position move : availableMoves) {
                     Board newBoard = new Board(board);
                     newBoard.movePawn(pos, move);
-                    int eval = minimax(newBoard, depth + 1, true, alpha, beta);
+                    int eval = minimax(newBoard, depth + 1, true, alpha, beta, correction);
                     minEval = Math.min(minEval, eval);
                     beta = Math.min(beta, eval);
                     if (beta <= alpha) {
-                        break  outerLoop; // Alpha cut-off
+                        break outerLoop; // Alpha cut-off
                     }
                 }
             }
-            return minEval+1;
+
+            return minEval + correction;
         }
     }
 
     private int evaluate(Board board, boolean isMaximizingPlayer) {
-        int scoreMax = 0;
-        int scoreMin = 0;
         int nbBlack = 0;
         int nbWhite = 0;
-        boolean whiteCanWin = false;
-
-        if (isGameOver(board)) {
-            for (int col = 0; col < 8; col++) {
-                if (board.getPawnAt(new Position(0, col)) != null && !board.getPawnAt(new Position(0, col)).isWhite()) {
-                    return isMaximizingPlayer ? LOSE_SCORE : WIN_SCORE;
-                }
-                if (board.getPawnAt(new Position(7, col)) != null && board.getPawnAt(new Position(7, col)).isWhite()) {
-                    return isMaximizingPlayer ? LOSE_SCORE : WIN_SCORE;
-                }
-            }
-        }
+        int whiteScore = 0;
+        int blackScore = 0;
+        boolean whiteWin = false;
 
         for (Position pos : getAllPawnsPositions(board, true)) {
             Pawn pawn = board.getPawnAt(pos);
             if (pawn != null) {
+//                if (pos.getRow() > 4 && isWinningPawn(board, pos, true)) {
+//                    whiteWin = true;
+//                    if (isMaximizingPlayer)
+//                        return WIN_SCORE;
+//                }
                 nbWhite++;
-                // Vérifier si le pion blanc va gagner dans le prochain coup
-                if (pos.getRow() == 6) {
-                    if (isMaximizingPlayer) {
-                        return WIN_SCORE; // C'est le tour des blancs et ils gagnent
-                    } else if (!canBeCaptured(board, pos, false)) {
-                        whiteCanWin = true; // Ce n'est pas le tour des blancs, mais ils ne peuvent pas être capturés
-                    }
-                }
-
-                // Avancement des pions
-                scoreMax += pos.getRow();
-
-                // Protection des pions
-                scoreMax += isProtectedSquare(board, pos, true);
+                whiteScore += pos.getRow(); // Plus un pion est proche de la fin, plus sa valeur est élevée
+                whiteScore += (isProtectedSquare(board, pos, true)) * 2; // Bonus pour les pions protégés
             }
         }
 
         for (Position pos : getAllPawnsPositions(board, false)) {
             Pawn pawn = board.getPawnAt(pos);
             if (pawn != null) {
+//                if (pos.getRow() < 3 && isWinningPawn(board, pos, false)) {
+//                    return LOSE_SCORE;
+//                }
                 nbBlack++;
-                // Vérifier si le pion noir va gagner dans le prochain coup
-                if (pos.getRow() == 1) {
-                    if (!isMaximizingPlayer) {
-                        return LOSE_SCORE; // C'est le tour des noirs et ils gagnent
-                    }
-                    else if (!canBeCaptured(board, pos, true)) {
-                        return LOSE_SCORE; // Ce n'est pas le tour des noirs, mais ils ne peuvent pas être capturés
-                    }
-                }
-
-                // Avancement des pions
-                scoreMin += (7 - pos.getRow());
-
-                // Protection des pions
-                scoreMin += isProtectedSquare(board, pos, false);
+                blackScore += (7 - pos.getRow()); // Plus un pion est proche de la fin, plus sa valeur est élevée
+                blackScore += (isProtectedSquare(board, pos, false)) * 2; // Bonus pour les pions protégés
             }
         }
-        if(whiteCanWin)
-            return WIN_SCORE;
+
+//        if (whiteWin)
+//            return WIN_SCORE;
 
 
-        return (scoreMax - scoreMin) + (nbWhite - nbBlack)*5 + checkBoard(board);
+        return (whiteScore - blackScore) + (nbWhite - nbBlack) * 100;
     }
+
 
     private boolean canBeCaptured(Board board, Position position, boolean byWhite) {
         int row = position.getRow();
@@ -137,7 +127,7 @@ public class Ai {
         int direction = isWhite ? -1 : 1;
 
         for (int i = -1; i <= 1; i++) {
-            if(i!=0) {
+            if (i != 0) {
                 int newRow = row + direction;
                 int newCol = col + i;
                 if (isValidPosition(newRow, newCol)) {
@@ -168,6 +158,24 @@ public class Ai {
         return false;
     }
 
+    private boolean isGameOverfor(Board board, boolean forWhite) {
+        for (Position pos : getAllPawnsPositions(board, forWhite)) {
+            Pawn pawn = board.getPawnAt(pos);
+            if (pawn != null) {
+                if (forWhite) {
+                    if (pos.getRow() > 4 && isWinningPawn(board, pos, true)) {
+                        return true;
+                    }
+                } else {
+                    if (pos.getRow() < 3 && isWinningPawn(board, pos, false)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 
     private List<Position> getAllPawnsPositions(Board board, boolean isWhite) {
         List<Position> positions = new ArrayList<>();
@@ -179,26 +187,32 @@ public class Ai {
                 }
             }
         }
+        // Collections.shuffle(positions);
         return positions;
     }
 
-    private int checkBoard(Board board) {
-        int score = 0;
-        for (int col = 0; col < 8; col++) {
-            for (int row = 0; row < 8; row++) {
-                Pawn pawn = board.getPawnAt(new Position(row, col));
-                if (pawn != null && pawn.isWhite()) {
-                    if(!pawn.isHasMoved())
-                        score ++;
-                    score++;
-                }
-                else if (pawn != null && !pawn.isWhite()) {
-                    if(!pawn.isHasMoved())
-                        score --;
-                    score --;
-                }
-            }
+    private boolean isWinningPawn(Board board, Position position, boolean isWhite) {
+        int direction = isWhite ? 1 : -1;
+        if (isWhite && position.getRow() == 7 || !isWhite && position.getRow() == 0) {
+            return true;
         }
-        return score;
+        if (canBeCaptured(board, position, !isWhite)) {
+            return false;
+        }
+        if (isWhite && position.getRow() == 6 || !isWhite && position.getRow() == 1) {
+            return true;
+        }
+        Position f = position.getForwardPosition(direction);
+        Position l = position.getForwardLeftPosition(direction);
+        Position r = position.getForwardRightPosition(direction);
+        board.getPawnAt(f);
+        if (board.getPawnAt(f) == null) {
+            return !(isProtectedSquare(board, f, !isWhite) >= isProtectedSquare(board, f, isWhite) && isProtectedSquare(board, l, !isWhite) >= isProtectedSquare(board, l, isWhite) && isProtectedSquare(board, r, !isWhite) >= isProtectedSquare(board, r, isWhite));
+        } else {
+            return !(isProtectedSquare(board, l, !isWhite) >= isProtectedSquare(board, l, isWhite) && isProtectedSquare(board, r, !isWhite) >= isProtectedSquare(board, r, isWhite));
+        }
     }
+
+
 }
+
