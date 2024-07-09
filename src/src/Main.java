@@ -112,6 +112,7 @@ public class Main {
                 }
             }
         }
+        System.out.println(bestEval);
         //minimax.setTranspositionTable(new HashMap<>());
         // Effectuer le mouvement sur le plateau principal
         playerMove(isWhite, bestMove);

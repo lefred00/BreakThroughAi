@@ -95,8 +95,8 @@ public class Ai {
 //                        return WIN_SCORE;
 //                }
                 nbWhite++;
-                whiteScore += pos.getRow(); // Plus un pion est proche de la fin, plus sa valeur est élevée
-                whiteScore += (isProtectedSquare(board, pos, true)) * 2; // Bonus pour les pions protégés
+                //whiteScore += pos.getRow(); // Plus un pion est proche de la fin, plus sa valeur est élevée
+                whiteScore += ( pos.getRow()*isProtectedSquare(board, pos, true)) * 2; // Bonus pour les pions protégés
             }
         }
 
@@ -107,16 +107,15 @@ public class Ai {
 //                    return LOSE_SCORE;
 //                }
                 nbBlack++;
-                blackScore += (7 - pos.getRow()); // Plus un pion est proche de la fin, plus sa valeur est élevée
-                blackScore += (isProtectedSquare(board, pos, false)) * 2; // Bonus pour les pions protégés
+                //blackScore += (7 - pos.getRow()); // Plus un pion est proche de la fin, plus sa valeur est élevée
+                blackScore += ((7 - pos.getRow())*isProtectedSquare(board, pos, false)) * 2; // Bonus pour les pions protégés
             }
         }
 
 //        if (whiteWin)
 //            return WIN_SCORE;
 
-
-        return ((whiteScore - blackScore) + (nbWhite - nbBlack) * 100)/10;
+        return (whiteScore - blackScore) + (nbWhite - nbBlack) * 100;
     }
 
 
