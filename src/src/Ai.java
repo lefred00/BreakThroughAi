@@ -4,27 +4,21 @@ public class Ai {
     private static final int MAX_DEPTH = 4;
     private static final int WIN_SCORE = 10000;
     private static final int LOSE_SCORE = -10000;
-    public long startTime;
-    public static final long TIME_LIMIT = 50000; // Limite de temps en millisecondes (1 seconde)
+    //public static long startTime;
+    public static long TIME_LIMIT = 0; // Limite de temps en millisecondes (1 seconde)
 
     public int minimax(Board board, int depth, boolean isMaximizingPlayer, int alpha, int beta, int correction) {
-        if (System.currentTimeMillis() - startTime > TIME_LIMIT) {
-            return evaluate(board, isMaximizingPlayer); // Retourner une évaluation approximative si le temps est écoulé
-        }
+        //long startTime = System.nanoTime();
+        // long timeLimitNanos = timeLimit * 1_000_000; // Convertir la limite de temps en nanosecondes
         if (isGameOver(board)) {
-            return isMaximizingPlayer ? LOSE_SCORE*2 : WIN_SCORE*2;
+            return isMaximizingPlayer ? LOSE_SCORE * 2 : WIN_SCORE * 2;
         }
-//        if (isGameOverIn1(board, !isMaximizingPlayer)) {
-//            return isMaximizingPlayer ? LOSE_SCORE + correction*10 : WIN_SCORE + correction*10;
-//        }
-//        if (isGameOverIn2(board, !isMaximizingPlayer)) {
-//            return isMaximizingPlayer ? LOSE_SCORE + correction*20 : WIN_SCORE + correction*20;
-//        }
 
         if (depth == MAX_DEPTH) {
             return evaluate(board, isMaximizingPlayer) + correction;
         }
-        List<Position> allPawnsPositions = getAllPawnsPositions(board, isMaximizingPlayer);
+        int nbBranches = Main.nbBranches(isMaximizingPlayer);
+        List<Position> allPawnsPositions = Main.getAllPawnsPositions(board, isMaximizingPlayer);
 
         if (isMaximizingPlayer) {
             int maxEval = Integer.MIN_VALUE;
@@ -65,6 +59,7 @@ public class Ai {
         }
     }
 
+
     private int evaluate(Board board, boolean isMaximizingPlayer) {
         int nbBlack = 0;
         int nbWhite = 0;
@@ -72,50 +67,46 @@ public class Ai {
         int blackScore = 0;
         boolean whiteWin = false;
 
-        if(isGameOverIn1(board, isMaximizingPlayer)) {
+        if (isGameOverIn1(board, isMaximizingPlayer)) {
             return isMaximizingPlayer ? WIN_SCORE : LOSE_SCORE;
         }
-        if(isGameOverIn1(board, !isMaximizingPlayer)) {
+        if (isGameOverIn1(board, !isMaximizingPlayer)) {
             return !isMaximizingPlayer ? WIN_SCORE : LOSE_SCORE;
         }
-        if(isGameOverIn2(board, isMaximizingPlayer)) {
+        if (isGameOverIn2(board, isMaximizingPlayer)) {
             return isMaximizingPlayer ? WIN_SCORE : LOSE_SCORE;
         }
-        if(isGameOverIn2(board, !isMaximizingPlayer)) {
+        if (isGameOverIn2(board, !isMaximizingPlayer)) {
             return !isMaximizingPlayer ? WIN_SCORE : LOSE_SCORE;
         }
 
 
-        for (Position pos : getAllPawnsPositions(board, true)) {
+        for (Position pos : Main.getAllPawnsPositions(board, true)) {
             Pawn pawn = board.getPawnAt(pos);
             if (pawn != null) {
-//                if (pos.getRow() > 4 && isWinningPawn(board, pos, true)) {
-//                    whiteWin = true;
-//                    if (isMaximizingPlayer)
-//                        return WIN_SCORE;
-//                }
+//                if(unstopable(board,pos,true))
+//                    whiteScore += 100 * pos.getRow();
                 nbWhite++;
+                if(sidesProtected(board,pos,true))
+                    whiteScore += 50;
                 //whiteScore += pos.getRow(); // Plus un pion est proche de la fin, plus sa valeur est élevée
-                whiteScore += ( pos.getRow()*isProtectedSquare(board, pos, true)) * 2; // Bonus pour les pions protégés
+                whiteScore += (pos.getRow() * isProtectedSquare(board, pos, true)) * 2; // Bonus pour les pions protégés
             }
         }
 
-        for (Position pos : getAllPawnsPositions(board, false)) {
+        for (Position pos : Main.getAllPawnsPositions(board, false)) {
             Pawn pawn = board.getPawnAt(pos);
             if (pawn != null) {
-//                if (pos.getRow() < 3 && isWinningPawn(board, pos, false)) {
-//                    return LOSE_SCORE;
-//                }
+//                if(unstopable(board,pos,false))
+//                    blackScore += 100 * (7 - pos.getRow());
                 nbBlack++;
+                if(sidesProtected(board,pos,false))
+                    blackScore += 50;
                 //blackScore += (7 - pos.getRow()); // Plus un pion est proche de la fin, plus sa valeur est élevée
-                blackScore += ((7 - pos.getRow())*isProtectedSquare(board, pos, false)) * 2; // Bonus pour les pions protégés
+                blackScore += ((7 - pos.getRow()) * isProtectedSquare(board, pos, false)) * 2; // Bonus pour les pions protégés
             }
         }
-
-//        if (whiteWin)
-//            return WIN_SCORE;
-
-        return (whiteScore - blackScore) + (nbWhite - nbBlack) * 100;
+        return (whiteScore - blackScore) + (nbWhite - nbBlack) * 500;
     }
 
 
@@ -175,7 +166,7 @@ public class Ai {
     }
 
     private boolean isGameOverIn2(Board board, boolean forWhite) {
-        for (Position pos : getAllPawnsPositions(board, forWhite)) {
+        for (Position pos : Main.getAllPawnsPositions(board, forWhite)) {
             Pawn pawn = board.getPawnAt(pos);
             if (pawn != null) {
                 if (forWhite) {
@@ -193,7 +184,7 @@ public class Ai {
     }
 
     private boolean isGameOverIn1(Board board, boolean forWhite) {
-        for (Position pos : getAllPawnsPositions(board, forWhite)) {
+        for (Position pos : Main.getAllPawnsPositions(board, forWhite)) {
             Pawn pawn = board.getPawnAt(pos);
             if (pawn != null) {
                 if (forWhite) {
@@ -211,19 +202,7 @@ public class Ai {
     }
 
 
-    private List<Position> getAllPawnsPositions(Board board, boolean isWhite) {
-        List<Position> positions = new ArrayList<>();
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                Pawn pawn = board.getPawnAt(new Position(row, col));
-                if (pawn != null && pawn.isWhite() == isWhite) {
-                    positions.add(new Position(row, col));
-                }
-            }
-        }
-        // Collections.shuffle(positions);
-        return positions;
-    }
+
 
     private boolean isWinningPawn(Board board, Position position, boolean isWhite) {
         int direction = isWhite ? 1 : -1;
@@ -245,6 +224,36 @@ public class Ai {
         } else {
             return !(isProtectedSquare(board, l, !isWhite) >= isProtectedSquare(board, l, isWhite) && isProtectedSquare(board, r, !isWhite) >= isProtectedSquare(board, r, isWhite));
         }
+    }
+
+    private boolean unstopable(Board board, Position position, boolean isWhite) {
+        int col = position.getCol();
+        int direction = isWhite ? 1 : -1;
+        int endRow = isWhite ? 7 : 0;
+        int row = position.getRow() + direction * 2;
+        while (row != endRow + direction) {
+            if (isValidPosition(row, col - 1) && board.getPawnAt(new Position(row, col - 1)) != null && board.getPawnAt(new Position(row, col - 1)).isWhite() == !isWhite) {
+                return false;
+            }
+            if (isValidPosition(row, col) && board.getPawnAt(new Position(row, col)) != null && board.getPawnAt(new Position(row, col)).isWhite() == !isWhite) {
+                return false;
+            }
+
+            if (isValidPosition(row, col + 1) && board.getPawnAt(new Position(row, col + 1)) != null && board.getPawnAt(new Position(row, col + 1)).isWhite() == !isWhite) {
+                return false;
+            }
+            row = row + direction;
+        }
+        return true;
+    }
+
+    private boolean sidesProtected(Board board, Position position, boolean isWhite) {
+        int col = position.getCol();
+        int row = position.getRow();
+
+        return (isValidPosition(row, col - 1) && board.getPawnAt(new Position(row, col - 1)) == null && isProtectedSquare(board, new Position(row, col + 1), isWhite) > 0)
+                &&
+                (isValidPosition(row, col + 1) && board.getPawnAt(new Position(row, col + 1)) == null && isProtectedSquare(board, new Position(row, col + 1), isWhite) > 0);
     }
 
 

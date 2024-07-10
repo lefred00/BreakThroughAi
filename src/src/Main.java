@@ -5,6 +5,8 @@ public class Main {
     private static final Scanner scanner = new Scanner(System.in);
     private static final Ai minimax = new Ai();
     private static final Board board = new Board();
+    public static long TIME_LIMIT = 15000; // Limite de temps en millisecondes (1 seconde)
+
 
     public static void main(String[] args) {
         boolean isWhitePlayer = chooseColor();
@@ -79,12 +81,12 @@ public class Main {
     }
 
     public static String aiMove(boolean isWhite) {
-        minimax.startTime = System.currentTimeMillis();
+        //long startTime = System.nanoTime();
         int correction = isWhite ? -1 : 1;
         String bestMove = "";
         int bestEval = isWhite ? Integer.MIN_VALUE : Integer.MAX_VALUE;
 
-        List<Position> allPawnsPositions = getAllPawnsPositions(isWhite);
+        List<Position> allPawnsPositions = getAllPawnsPositions(board,isWhite);
 
         outerLoop:
         for (Position pos : allPawnsPositions) {
@@ -107,9 +109,9 @@ public class Main {
                     }
                     if (eval <= -10000*2) break outerLoop;
                 }
-                if (System.currentTimeMillis() - minimax.startTime > Ai.TIME_LIMIT) {
-                    break outerLoop;
-                }
+//                if (System.nanoTime() - startTime > TIME_LIMIT*1_000_000) {
+//                    break outerLoop;
+//                }
             }
         }
         System.out.println(bestEval);
@@ -118,6 +120,18 @@ public class Main {
         playerMove(isWhite, bestMove);
         System.out.println("AI move: " + bestMove);
         return bestMove.toUpperCase();
+    }
+
+    public static int nbBranches(boolean isWhite){
+        int nbBranches = 0;
+        List<Position> allPawnsPositions = getAllPawnsPositions(board,isWhite);
+        for (Position pos : allPawnsPositions) {
+            List<Position> availableMoves = board.getAvailableMoves(pos);
+            for (Position move : availableMoves) {
+                nbBranches++;
+            }
+        }
+        return nbBranches;
     }
 
 
@@ -141,17 +155,29 @@ public class Main {
         return false;
     }
 
-    private static List<Position> getAllPawnsPositions(boolean isWhite) {
+    public static List<Position> getAllPawnsPositions(Board board,boolean isWhite) {
         List<Position> positions = new ArrayList<>();
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                Pawn pawn = board.getPawnAt(new Position(row, col));
-                if (pawn != null && pawn.isWhite() == isWhite) {
-                    positions.add(new Position(row, col));
+
+        if(!isWhite) {
+            for (int row = 0; row < 8; row++) {
+                for (int col = 0; col < 8; col++) {
+                    Pawn pawn = board.getPawnAt(new Position(row, col));
+                    if (pawn != null && pawn.isWhite() == isWhite) {
+                        positions.add(new Position(row, col));
+                    }
                 }
             }
         }
-        Collections.shuffle(positions);
+        else{
+            for (int row = 7; row > -1; row--) {
+                for (int col = 7; col > -1; col--) {
+                    Pawn pawn = board.getPawnAt(new Position(row, col));
+                    if (pawn != null && pawn.isWhite() == isWhite) {
+                        positions.add(new Position(row, col));
+                    }
+                }
+            }
+        }
         return positions;
     }
 }
