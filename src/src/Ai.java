@@ -2,8 +2,8 @@ import java.util.*;
 
 public class Ai {
     private static final int MAX_DEPTH = 4;
-    private static final int WIN_SCORE = 10000;
-    private static final int LOSE_SCORE = -10000;
+    private static final int WIN_SCORE = 100000;
+    private static final int LOSE_SCORE = -100000;
     //public static long startTime;
     public static long TIME_LIMIT = 0; // Limite de temps en millisecondes (1 seconde)
 
@@ -67,16 +67,16 @@ public class Ai {
         int blackScore = 0;
         boolean whiteWin = false;
 
-        if (isGameOverIn1(board, isMaximizingPlayer)) {
+        if (isGameOverIn1(board, isMaximizingPlayer,true)) {
             return isMaximizingPlayer ? WIN_SCORE : LOSE_SCORE;
         }
-        if (isGameOverIn1(board, !isMaximizingPlayer)) {
+        if (isGameOverIn1(board, !isMaximizingPlayer,false)) {
             return !isMaximizingPlayer ? WIN_SCORE : LOSE_SCORE;
         }
-        if (isGameOverIn2(board, isMaximizingPlayer)) {
+        if (isGameOverIn2(board, isMaximizingPlayer,true)) {
             return isMaximizingPlayer ? WIN_SCORE : LOSE_SCORE;
         }
-        if (isGameOverIn2(board, !isMaximizingPlayer)) {
+        if (isGameOverIn2(board, !isMaximizingPlayer,false)) {
             return !isMaximizingPlayer ? WIN_SCORE : LOSE_SCORE;
         }
 
@@ -106,7 +106,7 @@ public class Ai {
                 blackScore += ((7 - pos.getRow()) * isProtectedSquare(board, pos, false)) * 2; // Bonus pour les pions protégés
             }
         }
-        return (whiteScore - blackScore) + (nbWhite - nbBlack) * 500;
+        return (whiteScore - blackScore) + (nbWhite - nbBlack) * 1000;
     }
 
 
@@ -165,16 +165,16 @@ public class Ai {
         return false;
     }
 
-    private boolean isGameOverIn2(Board board, boolean forWhite) {
+    private boolean isGameOverIn2(Board board, boolean forWhite,boolean isHisTurn) {
         for (Position pos : Main.getAllPawnsPositions(board, forWhite)) {
             Pawn pawn = board.getPawnAt(pos);
             if (pawn != null) {
                 if (forWhite) {
-                    if (pos.getRow() == 5 && isWinningPawn(board, pos, true)) {
+                    if (pos.getRow() == 5 && isWinningPawn(board, pos, true, isHisTurn)) {
                         return true;
                     }
                 } else {
-                    if (pos.getRow() == 2 && isWinningPawn(board, pos, false)) {
+                    if (pos.getRow() == 2 && isWinningPawn(board, pos, false, isHisTurn)) {
                         return true;
                     }
                 }
@@ -183,16 +183,16 @@ public class Ai {
         return false;
     }
 
-    private boolean isGameOverIn1(Board board, boolean forWhite) {
+    private boolean isGameOverIn1(Board board, boolean forWhite,boolean isHisTurn) {
         for (Position pos : Main.getAllPawnsPositions(board, forWhite)) {
             Pawn pawn = board.getPawnAt(pos);
             if (pawn != null) {
                 if (forWhite) {
-                    if (pos.getRow() == 6 && isWinningPawn(board, pos, true)) {
+                    if (pos.getRow() == 6 && isWinningPawn(board, pos, true,isHisTurn)) {
                         return true;
                     }
                 } else {
-                    if (pos.getRow() == 1 && isWinningPawn(board, pos, false)) {
+                    if (pos.getRow() == 1 && isWinningPawn(board, pos, false,isHisTurn)) {
                         return true;
                     }
                 }
@@ -204,7 +204,7 @@ public class Ai {
 
 
 
-    private boolean isWinningPawn(Board board, Position position, boolean isWhite) {
+    private boolean isWinningPawn(Board board, Position position, boolean isWhite, boolean isHisTurn) {
         int direction = isWhite ? 1 : -1;
         if (isWhite && position.getRow() == 7 || !isWhite && position.getRow() == 0) {
             return true;
@@ -219,10 +219,56 @@ public class Ai {
         Position l = position.getForwardLeftPosition(direction);
         Position r = position.getForwardRightPosition(direction);
         board.getPawnAt(f);
+        boolean fPos = !(isProtectedSquare(board, f, !isWhite) >= isProtectedSquare(board, f, isWhite));
+        boolean lPos = !(isProtectedSquare(board, l, !isWhite) >= isProtectedSquare(board, l, isWhite));
+        boolean rPos = !(isProtectedSquare(board, r, !isWhite) >= isProtectedSquare(board, r, isWhite));
+        if(!isHisTurn){
+            if(isProtectedSquare(board, f, isWhite) == 2) {
+                int nbDeff = 2;
+                Position deffenderLeft = deffender(board, f, true, isWhite);
+                Position deffenderRight = deffender(board, f, false, isWhite);
+                if (canBeCaptured(board, deffenderRight, !isWhite))
+                    nbDeff--;
+                if (canBeCaptured(board, deffenderLeft, !isWhite))
+                    nbDeff--;
+                fPos = nbDeff > isProtectedSquare(board, f, !isWhite);
+            }
+            if(isProtectedSquare(board, l, isWhite) == 2) {
+                int nbDeff = 2;
+                Position deffenderLeft = deffender(board, l, true, isWhite);
+                Position deffenderRight = deffender(board, l, false, isWhite);
+                if (canBeCaptured(board, deffenderRight, !isWhite))
+                    nbDeff--;
+                if (canBeCaptured(board, deffenderLeft, !isWhite))
+                    nbDeff--;
+                lPos = nbDeff > isProtectedSquare(board, l, !isWhite);
+            }
+            if(isProtectedSquare(board, r, isWhite) == 2) {
+                int nbDeff = 2;
+                Position deffenderLeft = deffender(board, r, true, isWhite);
+                Position deffenderRight = deffender(board, r, false, isWhite);
+                if (canBeCaptured(board, deffenderRight, !isWhite))
+                    nbDeff--;
+                if (canBeCaptured(board, deffenderLeft, !isWhite))
+                    nbDeff--;
+                rPos = nbDeff > isProtectedSquare(board, r, !isWhite);
+            }
+
+        }
         if (board.getPawnAt(f) == null) {
-            return !(isProtectedSquare(board, f, !isWhite) >= isProtectedSquare(board, f, isWhite) && isProtectedSquare(board, l, !isWhite) >= isProtectedSquare(board, l, isWhite) && isProtectedSquare(board, r, !isWhite) >= isProtectedSquare(board, r, isWhite));
+            return fPos && lPos && rPos;
         } else {
-            return !(isProtectedSquare(board, l, !isWhite) >= isProtectedSquare(board, l, isWhite) && isProtectedSquare(board, r, !isWhite) >= isProtectedSquare(board, r, isWhite));
+            return lPos && rPos;
+        }
+    }
+
+    private Position deffender(Board board,Position posTodeffend,boolean leftDeffender, boolean isWhite) {
+        int direction = isWhite ? -1 : 1;
+        if(leftDeffender) {
+            return new Position(posTodeffend.getRow() + direction, posTodeffend.getCol() - 1);
+        }
+        else{
+            return new Position(posTodeffend.getRow() + direction, posTodeffend.getCol() + 1);
         }
     }
 
@@ -251,7 +297,7 @@ public class Ai {
         int col = position.getCol();
         int row = position.getRow();
 
-        return (isValidPosition(row, col - 1) && board.getPawnAt(new Position(row, col - 1)) == null && isProtectedSquare(board, new Position(row, col + 1), isWhite) > 0)
+        return (isValidPosition(row, col - 1) && board.getPawnAt(new Position(row, col - 1)) == null && isProtectedSquare(board, new Position(row, col - 1), isWhite) > 0)
                 &&
                 (isValidPosition(row, col + 1) && board.getPawnAt(new Position(row, col + 1)) == null && isProtectedSquare(board, new Position(row, col + 1), isWhite) > 0);
     }
