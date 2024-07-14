@@ -87,6 +87,10 @@ public class Ai {
 //                if(unstopable(board,pos,true))
 //                    whiteScore += 100 * pos.getRow();
                 nbWhite++;
+                if(isProtectedSquare(board,pos,true)<isProtectedSquare(board,pos,false)){
+                    if (!isMaximizingPlayer)
+                        whiteScore-=1000;
+                }
                 if(sidesProtected(board,pos,true))
                     whiteScore += 50;
                 //whiteScore += pos.getRow(); // Plus un pion est proche de la fin, plus sa valeur est élevée
@@ -100,6 +104,10 @@ public class Ai {
 //                if(unstopable(board,pos,false))
 //                    blackScore += 100 * (7 - pos.getRow());
                 nbBlack++;
+                if(isProtectedSquare(board,pos,false)<isProtectedSquare(board,pos,true)){
+                    if (isMaximizingPlayer)
+                        blackScore-=1000;
+                }
                 if(sidesProtected(board,pos,false))
                     blackScore += 50;
                 //blackScore += (7 - pos.getRow()); // Plus un pion est proche de la fin, plus sa valeur est élevée
