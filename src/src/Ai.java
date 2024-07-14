@@ -141,6 +141,9 @@ public class Ai {
         int col = position.getCol();
         int nbProtecters = 0;
 
+        if(!isValidPosition(row,col))
+            return 0;
+
         int direction = isWhite ? -1 : 1;
 
         for (int i = -1; i <= 1; i++) {
@@ -190,20 +193,25 @@ public class Ai {
 
                     if (board.getPawnAt(f) == null) {
                         if (fPos || lPos || rPos) {
-                            if (fPos && isValidPosition(f.getRow(),f.getCol()))
+                            if (fPos && isValidPosition(f.getRow(),f.getCol())) {
                                 return isWinningPawn(board, f, forWhite, isHisTurn);
-                            if (lPos && isValidPosition(l.getRow(),l.getCol()))
+                            }
+                            if (lPos && isValidPosition(l.getRow(),l.getCol())) {
                                 return isWinningPawn(board, l, forWhite, isHisTurn);
-                            if(rPos && isValidPosition(r.getRow(),r.getCol()))
+                            }
+                            if(rPos && isValidPosition(r.getRow(),r.getCol())) {
                                 return isWinningPawn(board, r, forWhite, isHisTurn);
+                            }
                         }
 
                     } else {
                         if (lPos || rPos) {
-                            if (lPos && isValidPosition(l.getRow(),l.getCol()))
+                            if (lPos && isValidPosition(l.getRow(), l.getCol())) {
                                 return isWinningPawn(board, l, forWhite, isHisTurn);
-                            if(rPos && isValidPosition(r.getRow(),r.getCol()))
+                            }
+                            if (rPos && isValidPosition(r.getRow(), r.getCol())) {
                                 return isWinningPawn(board, r, forWhite, isHisTurn);
+                            }
                         }
                     }
                 }
