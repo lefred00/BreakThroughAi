@@ -1,7 +1,7 @@
 import java.util.*;
 
 public class Ai {
-    private static final int MAX_DEPTH = 4;
+    private static final int MAX_DEPTH = 5;
     private static final int WIN_SCORE = 100000;
     private static final int LOSE_SCORE = -100000;
     //public static long startTime;
