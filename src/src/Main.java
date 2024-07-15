@@ -86,7 +86,7 @@ public class Main {
         String bestMove = "";
         int bestEval = isWhite ? Integer.MIN_VALUE : Integer.MAX_VALUE;
 
-        List<Position> allPawnsPositions = getAllPawnsPositions(board,isWhite);
+        List<Position> allPawnsPositions = getAllPawnsPositions(board, isWhite);
 
         outerLoop:
         for (Position pos : allPawnsPositions) {
@@ -95,19 +95,19 @@ public class Main {
             for (Position move : availableMoves) {
                 Board newBoard = new Board(board); // Assurez-vous de copier correctement le plateau
                 newBoard.movePawn(pos, move);
-                int eval = minimax.minimax(newBoard, 0, !isWhite, Integer.MIN_VALUE, Integer.MAX_VALUE,correction);
+                int eval = minimax.minimax(newBoard, 0, !isWhite, Integer.MIN_VALUE, Integer.MAX_VALUE, correction);
                 if (isWhite) {
                     if (eval > bestEval) {
                         bestEval = eval;
                         bestMove = positionToString(pos) + " " + positionToString(move);
                     }
-                    if (eval >= 10000*2) break outerLoop;
+                    if (eval >= 10000 * 2) break outerLoop;
                 } else {
                     if (eval < bestEval) {
                         bestEval = eval;
                         bestMove = positionToString(pos) + " " + positionToString(move);
                     }
-                    if (eval <= -10000*2) break outerLoop;
+                    if (eval <= -10000 * 2) break outerLoop;
                 }
 //                if (System.nanoTime() - startTime > TIME_LIMIT*1_000_000) {
 //                    break outerLoop;
@@ -122,9 +122,9 @@ public class Main {
         return bestMove.toUpperCase();
     }
 
-    public static int nbBranches(boolean isWhite){
+    public static int nbBranches(boolean isWhite) {
         int nbBranches = 0;
-        List<Position> allPawnsPositions = getAllPawnsPositions(board,isWhite);
+        List<Position> allPawnsPositions = getAllPawnsPositions(board, isWhite);
         for (Position pos : allPawnsPositions) {
             List<Position> availableMoves = board.getAvailableMoves(pos);
             for (Position move : availableMoves) {
@@ -155,10 +155,10 @@ public class Main {
         return false;
     }
 
-    public static List<Position> getAllPawnsPositions(Board board,boolean isWhite) {
+    public static List<Position> getAllPawnsPositions(Board board, boolean isWhite) {
         List<Position> positions = new ArrayList<>();
 
-        if(!isWhite) {
+        if (!isWhite) {
             for (int row = 0; row < 8; row++) {
                 for (int col = 0; col < 8; col++) {
                     Pawn pawn = board.getPawnAt(new Position(row, col));
@@ -167,8 +167,7 @@ public class Main {
                     }
                 }
             }
-        }
-        else{
+        } else {
             for (int row = 7; row > -1; row--) {
                 for (int col = 7; col > -1; col--) {
                     Pawn pawn = board.getPawnAt(new Position(row, col));
@@ -178,6 +177,19 @@ public class Main {
                 }
             }
         }
+        return positions;
+    }
+
+    public static List<Position> getAllPawnsInRow(Board board, boolean isWhite, int row) {
+        List<Position> positions = new ArrayList<>();
+
+        for (int col = 0; col < 8; col++) {
+            Pawn pawn = board.getPawnAt(new Position(row, col));
+            if (pawn != null && pawn.isWhite() == isWhite) {
+                positions.add(new Position(row, col));
+            }
+        }
+
         return positions;
     }
 }
