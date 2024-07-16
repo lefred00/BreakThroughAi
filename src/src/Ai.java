@@ -118,7 +118,9 @@ public class Ai {
                 blackScore += ((7 - pos.getRow()) * isProtectedSquare(board, pos, false)) * 2; // Bonus pour les pions protégés
             }
         }
-        return (whiteScore - blackScore) + (nbWhite - nbBlack) * 1000;
+
+
+        return (whiteScore - blackScore) + (nbWhite - nbBlack) * 1000 + centerControl(board);
     }
 
 
@@ -264,7 +266,7 @@ public class Ai {
         Position f = position.getForwardPosition(direction);
         Position l = position.getForwardLeftPosition(direction);
         Position r = position.getForwardRightPosition(direction);
-        boolean fPos = !(isProtectedSquare(board, f, !isWhite) >= isProtectedSquare(board, f, isWhite));
+        boolean fPos = !(isProtectedSquare(board, f, !isWhite) > isProtectedSquare(board, f, isWhite));
         boolean lPos = !(isProtectedSquare(board, l, !isWhite) >= isProtectedSquare(board, l, isWhite));
         boolean rPos = !(isProtectedSquare(board, r, !isWhite) >= isProtectedSquare(board, r, isWhite));
         if (!isHisTurn) {
@@ -345,6 +347,36 @@ public class Ai {
         return (isValidPosition(row, col - 1) && board.getPawnAt(new Position(row, col - 1)) == null && isProtectedSquare(board, new Position(row, col - 1), isWhite) > 0)
                 &&
                 (isValidPosition(row, col + 1) && board.getPawnAt(new Position(row, col + 1)) == null && isProtectedSquare(board, new Position(row, col + 1), isWhite) > 0);
+    }
+
+    private int centerControl(Board board){
+        int whiteBonus=0, blackBonus=0;
+
+        for(int row = 3; row < 5; row++){
+            for(int col = 2; col < 6; col++){
+                Position posAct = new Position(row,col);
+
+                if(board.getPawnAt(posAct)== null)
+                    continue;
+
+                if(board.getPawnAt(posAct).isWhite()){
+                    whiteBonus+=40;
+                }
+                if(isProtectedSquare(board,posAct,true) > 0){
+                    whiteBonus+=20*isProtectedSquare(board,posAct,true);
+                }
+
+
+                if(!board.getPawnAt(posAct).isWhite()){
+                    blackBonus+=40;
+                }
+                if(isProtectedSquare(board,posAct,false) > 0){
+                    blackBonus+=20*isProtectedSquare(board,posAct,false);
+                }
+            }
+        }
+
+        return whiteBonus-blackBonus;
     }
 
 

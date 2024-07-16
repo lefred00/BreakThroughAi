@@ -88,14 +88,20 @@ public class Main {
 
         List<Position> allPawnsPositions = getAllPawnsPositions(board, isWhite);
 
+        int danger = checkAdvancedPieces(board, isWhite) > 0 ? 1 : 0;
+
         outerLoop:
         for (Position pos : allPawnsPositions) {
             List<Position> availableMoves = board.getAvailableMoves(pos);
 
+            int depth = danger==1  ? 0 : getDepth(pos, isWhite);
+
             for (Position move : availableMoves) {
+
+
                 Board newBoard = new Board(board); // Assurez-vous de copier correctement le plateau
                 newBoard.movePawn(pos, move);
-                int eval = minimax.minimax(newBoard, 0, !isWhite, Integer.MIN_VALUE, Integer.MAX_VALUE, correction);
+                int eval = minimax.minimax(newBoard, depth, !isWhite, Integer.MIN_VALUE, Integer.MAX_VALUE, correction);
                 if (isWhite) {
                     if (eval > bestEval) {
                         bestEval = eval;
@@ -122,74 +128,128 @@ public class Main {
         return bestMove.toUpperCase();
     }
 
-    public static int nbBranches(boolean isWhite) {
-        int nbBranches = 0;
-        List<Position> allPawnsPositions = getAllPawnsPositions(board, isWhite);
-        for (Position pos : allPawnsPositions) {
-            List<Position> availableMoves = board.getAvailableMoves(pos);
-            for (Position move : availableMoves) {
-                nbBranches++;
+    private static int checkAdvancedPieces(Board board, boolean isWhite) {
+        if(isWhite)
+            return getAllPawnsInRow(board,!isWhite,3).size() + getAllPawnsInRow(board,!isWhite,2).size() + getAllPawnsInRow(board, !isWhite,1).size();
+
+        return getAllPawnsInRow(board,isWhite,6).size() + getAllPawnsInRow(board,isWhite,5).size() + getAllPawnsInRow(board, isWhite,5).size();
+    }
+
+    private static int getDepth(Position pos, boolean isWhite)
+    {
+       // if(getAllPawnsInRow())
+
+        if (isWhite)
+        {
+            switch (pos.getRow()) {
+                case 0:
+                    return 2;
+                case 1:
+                    return 1;
+                case 2:
+                    return 0;
+                case 3:
+                    return 0;
+                case 4:
+                    return -1;
+                case 5:
+                    return 1;
+                case 6:
+                    return 2;
             }
         }
-        return nbBranches;
-    }
+        else {
+            switch (pos.getRow()) {
 
-
-    private static String positionToString(Position pos) {
-        char col = (char) ('a' + pos.getCol());
-        char row = (char) ('1' + pos.getRow());
-        return "" + col + row;
-    }
-
-    private static boolean checkGameOver() {
-        for (int col = 0; col < 8; col++) {
-            if (board.getPawnAt(new Position(0, col)) != null && !board.getPawnAt(new Position(0, col)).isWhite()) {
-                System.out.println("Black wins!");
-                return true;
+                case 1:
+                    return 2;
+                case 2:
+                    return 1;
+                case 3:
+                    return -1;
+                case 4:
+                    return 0;
+                case 5:
+                    return 0;
+                case 6:
+                    return 1;
+                case 7:
+                    return 2;
             }
-            if (board.getPawnAt(new Position(7, col)) != null && board.getPawnAt(new Position(7, col)).isWhite()) {
-                System.out.println("White wins!");
-                return true;
-            }
+
         }
-        return false;
+
+        return 0;
     }
 
-    public static List<Position> getAllPawnsPositions(Board board, boolean isWhite) {
-        List<Position> positions = new ArrayList<>();
+public static int nbBranches(boolean isWhite) {
+    int nbBranches = 0;
+    List<Position> allPawnsPositions = getAllPawnsPositions(board, isWhite);
+    for (Position pos : allPawnsPositions) {
+        List<Position> availableMoves = board.getAvailableMoves(pos);
+        for (Position move : availableMoves) {
+            nbBranches++;
+        }
+    }
+    return nbBranches;
+}
 
-        if (!isWhite) {
-            for (int row = 0; row < 8; row++) {
-                for (int col = 0; col < 8; col++) {
-                    Pawn pawn = board.getPawnAt(new Position(row, col));
-                    if (pawn != null && pawn.isWhite() == isWhite) {
-                        positions.add(new Position(row, col));
-                    }
+
+private static String positionToString(Position pos) {
+    char col = (char) ('a' + pos.getCol());
+    char row = (char) ('1' + pos.getRow());
+    return "" + col + row;
+}
+
+private static boolean checkGameOver() {
+    for (int col = 0; col < 8; col++) {
+        if (board.getPawnAt(new Position(0, col)) != null && !board.getPawnAt(new Position(0, col)).isWhite()) {
+            System.out.println("Black wins!");
+            return true;
+        }
+        if (board.getPawnAt(new Position(7, col)) != null && board.getPawnAt(new Position(7, col)).isWhite()) {
+            System.out.println("White wins!");
+            return true;
+        }
+    }
+    return false;
+}
+
+public static List<Position> getAllPawnsPositions(Board board, boolean isWhite) {
+    List<Position> positions = new ArrayList<>();
+
+    if (!isWhite) {
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                Pawn pawn = board.getPawnAt(new Position(row, col));
+                if (pawn != null && pawn.isWhite() == isWhite) {
+                    positions.add(new Position(row, col));
                 }
             }
-        } else {
-            for (int row = 7; row > -1; row--) {
-                for (int col = 7; col > -1; col--) {
-                    Pawn pawn = board.getPawnAt(new Position(row, col));
-                    if (pawn != null && pawn.isWhite() == isWhite) {
-                        positions.add(new Position(row, col));
-                    }
+        }
+    } else {
+        for (int row = 7; row > -1; row--) {
+            for (int col = 7; col > -1; col--) {
+                Pawn pawn = board.getPawnAt(new Position(row, col));
+                if (pawn != null && pawn.isWhite() == isWhite) {
+                    positions.add(new Position(row, col));
                 }
             }
         }
-        return positions;
     }
+    return positions;
+}
 
-    public static List<Position> getAllPawnsInRow(Board board, boolean isWhite, int row) {
-        List<Position> positions = new ArrayList<>();
+public static List<Position> getAllPawnsInRow(Board board, boolean isWhite, int row) {
+    List<Position> positions = new ArrayList<>();
 
-        for (int col = 0; col < 8; col++) {
-            Pawn pawn = board.getPawnAt(new Position(row, col));
-            if (pawn != null && pawn.isWhite() == isWhite) {
-                positions.add(new Position(row, col));
-            }
+    for (int col = 0; col < 8; col++) {
+        Pawn pawn = board.getPawnAt(new Position(row, col));
+        if (pawn != null && pawn.isWhite() == isWhite) {
+            positions.add(new Position(row, col));
         }
-
-        return positions;
     }
+
+    return positions;
+}
 }
