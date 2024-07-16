@@ -1,7 +1,7 @@
 import java.util.*;
 
 public class Ai {
-    private static final int MAX_DEPTH = 5;
+    private static final int MAX_DEPTH = 4;
     private static final int WIN_SCORE = 100000;
     private static final int LOSE_SCORE = -100000;
     //public static long startTime;
@@ -98,7 +98,7 @@ public class Ai {
                 if (sidesProtected(board, pos, true))
                     whiteScore += 50;
                 //whiteScore += pos.getRow(); // Plus un pion est proche de la fin, plus sa valeur est élevée
-                whiteScore += (pos.getRow() * isProtectedSquare(board, pos, true)) * 5; // Bonus pour les pions protégés
+                whiteScore += (pos.getRow() * isProtectedSquare(board, pos, true)) * 2; // Bonus pour les pions protégés
             }
         }
 
@@ -115,7 +115,7 @@ public class Ai {
                 if (sidesProtected(board, pos, false))
                     blackScore += 50;
                 //blackScore += (7 - pos.getRow()); // Plus un pion est proche de la fin, plus sa valeur est élevée
-                blackScore += ((7 - pos.getRow()) * isProtectedSquare(board, pos, false)) * 5; // Bonus pour les pions protégés
+                blackScore += ((7 - pos.getRow()) * isProtectedSquare(board, pos, false)) * 2; // Bonus pour les pions protégés
             }
         }
         return (whiteScore - blackScore) + (nbWhite - nbBlack) * 1000;
@@ -141,6 +141,10 @@ public class Ai {
     private int isProtectedSquare(Board board, Position position, boolean isWhite) {
         int row = position.getRow();
         int col = position.getCol();
+
+        if(!isValidPosition(row,col))
+            return 0;
+
         int nbProtecters = 0;
 
         int direction = isWhite ? -1 : 1;
@@ -317,6 +321,7 @@ public class Ai {
         int direction = isWhite ? 1 : -1;
         int endRow = isWhite ? 7 : 0;
         int row = position.getRow() + direction * 2;
+
         while (row != endRow + direction) {
             if (isValidPosition(row, col - 1) && board.getPawnAt(new Position(row, col - 1)) != null && board.getPawnAt(new Position(row, col - 1)).isWhite() == !isWhite) {
                 return false;
