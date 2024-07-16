@@ -104,7 +104,7 @@ class Client {
 
                     // Convertir StringBuilder en String
                     String finalResult = result.toString();
-
+                    //Adel a aussi work les gars
                     System.out.println("Dernier coup :"+ s);
                     Main.playerMove(!isRed,finalResult);
                     System.out.println("Entrez votre coup : ");
