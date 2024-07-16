@@ -98,6 +98,8 @@ public class Ai {
                 if (sidesProtected(board, pos, true))
                     whiteScore += 50;
                 //whiteScore += pos.getRow(); // Plus un pion est proche de la fin, plus sa valeur est élevée
+                if(board.getPawnAt(new Position(7,pos.getCol()))==null)
+                    whiteScore += 50;
                 whiteScore += (pos.getRow() * isProtectedSquare(board, pos, true)) * 2; // Bonus pour les pions protégés
             }
         }
@@ -115,12 +117,14 @@ public class Ai {
                 if (sidesProtected(board, pos, false))
                     blackScore += 50;
                 //blackScore += (7 - pos.getRow()); // Plus un pion est proche de la fin, plus sa valeur est élevée
+                if(board.getPawnAt(new Position(0,pos.getCol()))==null)
+                    blackScore += 50;
                 blackScore += ((7 - pos.getRow()) * isProtectedSquare(board, pos, false)) * 2; // Bonus pour les pions protégés
             }
         }
 
 
-        return (whiteScore - blackScore) + (nbWhite - nbBlack) * 1000 + centerControl(board);
+        return (whiteScore - blackScore) + (nbWhite - nbBlack) * 1000 + centerControl(board)*2;
     }
 
 
@@ -302,11 +306,39 @@ public class Ai {
             }
 
         }
+
+
         if (board.getPawnAt(f) == null) {
-            return fPos || lPos || rPos;
+            if(fPos || lPos || rPos)
+                return true;
+            else {
+                boolean fe = (isProtectedSquare(board, f, !isWhite) == isProtectedSquare(board, f, isWhite)+1);
+                boolean le = (isProtectedSquare(board, l, !isWhite) == isProtectedSquare(board, l, isWhite));
+                boolean re = (isProtectedSquare(board, r, !isWhite) == isProtectedSquare(board, r, isWhite));
+                if(fe && le && re){
+                    if(isProtectedSquare(board,new Position(position.getRow(),position.getCol()+1),isWhite)>isProtectedSquare(board,new Position(position.getRow(),position.getCol()+1),!isWhite))
+                        return true;
+                    if(isProtectedSquare(board,new Position(position.getRow(),position.getCol()-1),isWhite)>isProtectedSquare(board,new Position(position.getRow(),position.getCol()-1),!isWhite))
+                        return true;
+                }
+            }
+
         } else {
-            return lPos || rPos;
+            if(lPos || rPos)
+                return true;
+            else {
+                boolean fe = (isProtectedSquare(board, f, !isWhite) == isProtectedSquare(board, f, isWhite));
+                boolean le = (isProtectedSquare(board, l, !isWhite) == isProtectedSquare(board, l, isWhite));
+                boolean re = (isProtectedSquare(board, r, !isWhite) == isProtectedSquare(board, r, isWhite));
+                if(fe && le && re ){
+                    if(isProtectedSquare(board,new Position(position.getRow(),position.getCol()+1),isWhite)>=isProtectedSquare(board,new Position(position.getRow(),position.getCol()+1),!isWhite))
+                        return true;
+                    if(isProtectedSquare(board,new Position(position.getRow(),position.getCol()-1),isWhite)>=isProtectedSquare(board,new Position(position.getRow(),position.getCol()-1),!isWhite))
+                        return true;
+                }
+            }
         }
+        return false;
     }
 
     private Position deffender(Board board, Position posTodeffend, boolean leftDeffender, boolean isWhite) {
