@@ -97,8 +97,6 @@ public class Main {
             int depth = danger==1  ? 0 : getDepth(pos, isWhite);
 
             for (Position move : availableMoves) {
-
-
                 Board newBoard = new Board(board); // Assurez-vous de copier correctement le plateau
                 newBoard.movePawn(pos, move);
                 int eval = minimax.minimax(newBoard, depth, !isWhite, Integer.MIN_VALUE, Integer.MAX_VALUE, correction);
@@ -132,7 +130,7 @@ public class Main {
         if(isWhite)
             return getAllPawnsInRow(board,!isWhite,3).size() + getAllPawnsInRow(board,!isWhite,2).size() + getAllPawnsInRow(board, !isWhite,1).size();
 
-        return getAllPawnsInRow(board,isWhite,6).size() + getAllPawnsInRow(board,isWhite,5).size() + getAllPawnsInRow(board, isWhite,5).size();
+        return getAllPawnsInRow(board,isWhite,6).size() + getAllPawnsInRow(board,isWhite,5).size() + getAllPawnsInRow(board, isWhite,4).size();
     }
 
     private static int getDepth(Position pos, boolean isWhite)
@@ -252,4 +250,20 @@ public static List<Position> getAllPawnsInRow(Board board, boolean isWhite, int 
 
     return positions;
 }
+
+
+    public static List<Position> getAllPawnsInColumn(Board board, boolean isWhite, int colStart, int colEnd) {
+        List<Position> positions = new ArrayList<>();
+
+        for (int row = 0; row < 6; row++) {
+            for(int col = colStart; col <= colEnd; col++) {
+                Pawn pawn = board.getPawnAt(new Position(row, col));
+                if (pawn != null && pawn.isWhite() == isWhite) {
+                    positions.add(new Position(row, col));
+                }
+            }
+        }
+
+        return positions;
+    }
 }

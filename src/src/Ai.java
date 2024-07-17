@@ -17,7 +17,9 @@ public class Ai {
         if (depth == MAX_DEPTH) {
             return evaluate(board, isMaximizingPlayer) + correction;
         }
-        int nbBranches = Main.nbBranches(isMaximizingPlayer);
+
+        //int nbBranches = Main.nbBranches(isMaximizingPlayer);
+
         List<Position> allPawnsPositions = Main.getAllPawnsPositions(board, isMaximizingPlayer);
 
         if (isMaximizingPlayer) {
@@ -95,11 +97,16 @@ public class Ai {
                     if (!isMaximizingPlayer)
                         whiteScore -= 1000;
                 }
+
                 if (sidesProtected(board, pos, true))
                     whiteScore += 50;
+
                 //whiteScore += pos.getRow(); // Plus un pion est proche de la fin, plus sa valeur est élevée
-                if(board.getPawnAt(new Position(7,pos.getCol()))==null)
-                    whiteScore += 50;
+
+                whiteScore += checkWeakSpots(board,true);
+                whiteScore += hasZugzwang(board,true);
+
+
                 whiteScore += (pos.getRow() * isProtectedSquare(board, pos, true)) * 2; // Bonus pour les pions protégés
             }
         }
@@ -117,8 +124,11 @@ public class Ai {
                 if (sidesProtected(board, pos, false))
                     blackScore += 50;
                 //blackScore += (7 - pos.getRow()); // Plus un pion est proche de la fin, plus sa valeur est élevée
-                if(board.getPawnAt(new Position(0,pos.getCol()))==null)
-                    blackScore += 50;
+
+                blackScore += checkWeakSpots(board,false);
+                blackScore += hasZugzwang(board,false);
+
+
                 blackScore += ((7 - pos.getRow()) * isProtectedSquare(board, pos, false)) * 2; // Bonus pour les pions protégés
             }
         }
@@ -316,10 +326,13 @@ public class Ai {
                 boolean le = (isProtectedSquare(board, l, !isWhite) == isProtectedSquare(board, l, isWhite));
                 boolean re = (isProtectedSquare(board, r, !isWhite) == isProtectedSquare(board, r, isWhite));
                 if(fe && le && re){
-                    if(isProtectedSquare(board,new Position(position.getRow(),position.getCol()+1),isWhite)>isProtectedSquare(board,new Position(position.getRow(),position.getCol()+1),!isWhite))
+                    if(isProtectedSquare(board,new Position(position.getRow(),position.getCol()+1),isWhite)
+                            >isProtectedSquare(board,new Position(position.getRow(),position.getCol()+1),!isWhite)
+                            && isValidPosition(position.getRow(),position.getCol()+1))
                         return true;
-                    if(isProtectedSquare(board,new Position(position.getRow(),position.getCol()-1),isWhite)>isProtectedSquare(board,new Position(position.getRow(),position.getCol()-1),!isWhite))
-                        return true;
+                    return isProtectedSquare(board, new Position(position.getRow(), position.getCol() - 1), isWhite)
+                            > isProtectedSquare(board, new Position(position.getRow(), position.getCol() - 1), !isWhite)
+                            && isValidPosition(position.getRow(), position.getCol() - 1);
                 }
             }
 
@@ -331,10 +344,14 @@ public class Ai {
                 boolean le = (isProtectedSquare(board, l, !isWhite) == isProtectedSquare(board, l, isWhite));
                 boolean re = (isProtectedSquare(board, r, !isWhite) == isProtectedSquare(board, r, isWhite));
                 if(fe && le && re ){
-                    if(isProtectedSquare(board,new Position(position.getRow(),position.getCol()+1),isWhite)>=isProtectedSquare(board,new Position(position.getRow(),position.getCol()+1),!isWhite))
+                    if(isProtectedSquare(board,new Position(position.getRow(),position.getCol()+1),isWhite)
+                            >=isProtectedSquare(board,new Position(position.getRow(),position.getCol()+1),!isWhite)
+                            && isValidPosition(position.getRow(),position.getCol()+1))
                         return true;
-                    if(isProtectedSquare(board,new Position(position.getRow(),position.getCol()-1),isWhite)>=isProtectedSquare(board,new Position(position.getRow(),position.getCol()-1),!isWhite))
-                        return true;
+
+                    return isProtectedSquare(board, new Position(position.getRow(), position.getCol() - 1), isWhite)
+                            >= isProtectedSquare(board, new Position(position.getRow(), position.getCol() - 1), !isWhite)
+                            && isValidPosition(position.getRow(), position.getCol() - 1);
                 }
             }
         }
@@ -383,27 +400,31 @@ public class Ai {
 
     private int centerControl(Board board){
         int whiteBonus=0, blackBonus=0;
+        int bonus =0;
 
         for(int row = 3; row < 5; row++){
             for(int col = 2; col < 6; col++){
+                if(col == 3 || col == 4){
+                    bonus = 20;
+                }
                 Position posAct = new Position(row,col);
 
                 if(board.getPawnAt(posAct)== null)
                     continue;
 
                 if(board.getPawnAt(posAct).isWhite()){
-                    whiteBonus+=40;
+                    whiteBonus+=40+bonus;
                 }
                 if(isProtectedSquare(board,posAct,true) > 0){
-                    whiteBonus+=20*isProtectedSquare(board,posAct,true);
+                    whiteBonus+=20*isProtectedSquare(board,posAct,true)+bonus;
                 }
 
 
                 if(!board.getPawnAt(posAct).isWhite()){
-                    blackBonus+=40;
+                    blackBonus+=40+bonus;
                 }
                 if(isProtectedSquare(board,posAct,false) > 0){
-                    blackBonus+=20*isProtectedSquare(board,posAct,false);
+                    blackBonus+=20*isProtectedSquare(board,posAct,false)+bonus;
                 }
             }
         }
@@ -411,6 +432,56 @@ public class Ai {
         return whiteBonus-blackBonus;
     }
 
+
+    public int checkWeakSpots(Board board, boolean isWhite){
+        int score =0;
+        int row = isWhite ? 7 : 0;
+
+        List<Position> list = Main.getAllPawnsInRow(board, isWhite, row);
+
+        for(Position position : list) {
+            if(board.getPawnAt(position)==null) {
+                int rowPawn = position.getRow();
+                int leftBoarder = isValidPosition(rowPawn,position.getCol()-1) ?
+                        position.getCol()-1:position.getCol();
+
+                int rightBoarder = isValidPosition(rowPawn,position.getCol()+1) ?
+                        position.getCol()+1:position.getCol();
+
+                score = Main.getAllPawnsInColumn(board, isWhite,leftBoarder,rightBoarder).size()*20;
+            }
+        }
+
+        for(Position pos : Main.getAllPawnsInRow(board,isWhite,row)){
+            if(isProtectedSquare(board,pos,isWhite)==0) {
+                score-=30;
+            }
+        }
+
+        return score;
+    }
+
+    public int hasZugzwang(Board board, boolean isWhite){
+        int score =0;
+        int row = isWhite ? 5 : 2;
+        int direction = isWhite ? 1 : -1;
+
+        List<Position> list = Main.getAllPawnsInRow(board, isWhite, row);
+
+        for(Position position : list) {
+            Position f = position.getForwardPosition(direction);
+            Position l = position.getForwardLeftPosition(direction);
+            Position r = position.getForwardRightPosition(direction);
+
+            if(isProtectedSquare(board,f,isWhite) == isProtectedSquare(board,f,isWhite)
+                &&isProtectedSquare(board,l,isWhite) == isProtectedSquare(board,l,isWhite)
+                    && isProtectedSquare(board,r,isWhite) == isProtectedSquare(board,r,isWhite)){
+                score+=50;
+            }
+        }
+
+        return score;
+    }
 
 }
 
