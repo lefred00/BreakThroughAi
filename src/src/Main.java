@@ -254,8 +254,13 @@ public static List<Position> getAllPawnsInRow(Board board, boolean isWhite, int 
 
     public static List<Position> getAllPawnsInColumn(Board board, boolean isWhite, int colStart, int colEnd) {
         List<Position> positions = new ArrayList<>();
+        int startRow=0,endRow=6;
+        if(!isWhite){
+            startRow=2;
+            endRow=8;
+        }
 
-        for (int row = 0; row < 6; row++) {
+        for (int row = startRow; row < endRow; row++) {
             for(int col = colStart; col <= colEnd; col++) {
                 Pawn pawn = board.getPawnAt(new Position(row, col));
                 if (pawn != null && pawn.isWhite() == isWhite) {

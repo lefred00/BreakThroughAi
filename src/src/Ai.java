@@ -103,13 +103,11 @@ public class Ai {
 
                 //whiteScore += pos.getRow(); // Plus un pion est proche de la fin, plus sa valeur est élevée
 
-                whiteScore += checkWeakSpots(board,true);
-                whiteScore += hasZugzwang(board,true);
-
-
                 whiteScore += (pos.getRow() * isProtectedSquare(board, pos, true)) * 2; // Bonus pour les pions protégés
             }
         }
+        whiteScore += checkWeakSpots(board,true);
+        whiteScore += hasZugzwang(board,true);
 
         for (Position pos : Main.getAllPawnsPositions(board, false)) {
             Pawn pawn = board.getPawnAt(pos);
@@ -125,14 +123,12 @@ public class Ai {
                     blackScore += 50;
                 //blackScore += (7 - pos.getRow()); // Plus un pion est proche de la fin, plus sa valeur est élevée
 
-                blackScore += checkWeakSpots(board,false);
-                blackScore += hasZugzwang(board,false);
-
-
                 blackScore += ((7 - pos.getRow()) * isProtectedSquare(board, pos, false)) * 2; // Bonus pour les pions protégés
             }
         }
 
+        blackScore += checkWeakSpots(board,false);
+        blackScore += hasZugzwang(board,false);
 
         return (whiteScore - blackScore) + (nbWhite - nbBlack) * 1000 + centerControl(board)*2;
     }
@@ -284,74 +280,90 @@ public class Ai {
         boolean lPos = !(isProtectedSquare(board, l, !isWhite) >= isProtectedSquare(board, l, isWhite));
         boolean rPos = !(isProtectedSquare(board, r, !isWhite) >= isProtectedSquare(board, r, isWhite));
         if (!isHisTurn) {
-            if (isProtectedSquare(board, f, isWhite) == 2) {
-                int nbDeff = 2;
-                Position deffenderLeft = deffender(board, f, true, isWhite);
-                Position deffenderRight = deffender(board, f, false, isWhite);
-                if (canBeCaptured(board, deffenderRight, !isWhite))
-                    nbDeff--;
-                if (canBeCaptured(board, deffenderLeft, !isWhite))
-                    nbDeff--;
+            if (isProtectedSquare(board, f, isWhite) > 0) {
+                int nbDeff = areDeffendersValid(board,f,isWhite);
                 fPos = nbDeff > isProtectedSquare(board, f, !isWhite);
             }
-            if (isProtectedSquare(board, l, isWhite) == 2) {
-                int nbDeff = 2;
-                Position deffenderLeft = deffender(board, l, true, isWhite);
-                Position deffenderRight = deffender(board, l, false, isWhite);
-                if (canBeCaptured(board, deffenderRight, !isWhite))
-                    nbDeff--;
-                if (canBeCaptured(board, deffenderLeft, !isWhite))
-                    nbDeff--;
+            if (isProtectedSquare(board, l, isWhite) > 0) {
+                int nbDeff = areDeffendersValid(board,l,isWhite);
                 lPos = nbDeff > isProtectedSquare(board, l, !isWhite);
             }
-            if (isProtectedSquare(board, r, isWhite) == 2) {
-                int nbDeff = 2;
-                Position deffenderLeft = deffender(board, r, true, isWhite);
-                Position deffenderRight = deffender(board, r, false, isWhite);
-                if (canBeCaptured(board, deffenderRight, !isWhite))
-                    nbDeff--;
-                if (canBeCaptured(board, deffenderLeft, !isWhite))
-                    nbDeff--;
+            if (isProtectedSquare(board, r, isWhite) > 0) {
+                int nbDeff =areDeffendersValid(board,r,isWhite);
                 rPos = nbDeff > isProtectedSquare(board, r, !isWhite);
             }
-
         }
-
-
         if (board.getPawnAt(f) == null) {
-            if(fPos || lPos || rPos)
+            if (fPos || lPos || rPos)
                 return true;
             else {
-                boolean fe = (isProtectedSquare(board, f, !isWhite) == isProtectedSquare(board, f, isWhite)+1);
+                boolean fe = (isProtectedSquare(board, f, !isWhite) + 1 == isProtectedSquare(board, f, isWhite));
                 boolean le = (isProtectedSquare(board, l, !isWhite) == isProtectedSquare(board, l, isWhite));
                 boolean re = (isProtectedSquare(board, r, !isWhite) == isProtectedSquare(board, r, isWhite));
-                if(fe && le && re){
-                    if(isProtectedSquare(board,new Position(position.getRow(),position.getCol()+1),isWhite)
-                            >isProtectedSquare(board,new Position(position.getRow(),position.getCol()+1),!isWhite)
-                            && isValidPosition(position.getRow(),position.getCol()+1))
-                        return true;
-                    return isProtectedSquare(board, new Position(position.getRow(), position.getCol() - 1), isWhite)
-                            > isProtectedSquare(board, new Position(position.getRow(), position.getCol() - 1), !isWhite)
-                            && isValidPosition(position.getRow(), position.getCol() - 1);
+                if (fe && le && re) {
+                    if(!isHisTurn){
+                        Position right = new Position(position.getRow(), position.getCol() + 1);
+                        Position left = new Position(position.getRow(), position.getCol() - 1);
+                        if (isValidPosition(left.getRow(),left.getCol()) && isProtectedSquare(board, left, isWhite) > 0) {
+                            int nbDeff = areDeffendersValid(board,left,isWhite);
+                            le = nbDeff >= isProtectedSquare(board, left, !isWhite);
+                            if(le)
+                                return true;
+                        }
+                        if (isValidPosition(right.getRow(),right.getCol()) && isProtectedSquare(board, right, isWhite) > 0) {
+                            int nbDeff =areDeffendersValid(board,right,isWhite);
+                            re = nbDeff >= isProtectedSquare(board, right, !isWhite);
+                            if(re)
+                                return true;
+                        }
+                    }
+                    else{
+                        if (isProtectedSquare(board, new Position(position.getRow(), position.getCol() + 1), isWhite)
+                                >= isProtectedSquare(board, new Position(position.getRow(), position.getCol() + 1), !isWhite)
+                                && isValidPosition(position.getRow(), position.getCol() + 1))
+                            return true;
+
+                        return isProtectedSquare(board, new Position(position.getRow(), position.getCol() - 1), isWhite)
+                                >= isProtectedSquare(board, new Position(position.getRow(), position.getCol() - 1), !isWhite)
+                                && isValidPosition(position.getRow(), position.getCol() - 1);
+                    }
                 }
             }
 
         } else {
-            if(lPos || rPos)
+            if (lPos || rPos)
                 return true;
             else {
                 boolean fe = (isProtectedSquare(board, f, !isWhite) == isProtectedSquare(board, f, isWhite));
                 boolean le = (isProtectedSquare(board, l, !isWhite) == isProtectedSquare(board, l, isWhite));
                 boolean re = (isProtectedSquare(board, r, !isWhite) == isProtectedSquare(board, r, isWhite));
-                if(fe && le && re ){
-                    if(isProtectedSquare(board,new Position(position.getRow(),position.getCol()+1),isWhite)
-                            >=isProtectedSquare(board,new Position(position.getRow(),position.getCol()+1),!isWhite)
-                            && isValidPosition(position.getRow(),position.getCol()+1))
-                        return true;
+                if (fe && le && re) {
+                    if(!isHisTurn){
+                        Position right = new Position(position.getRow(), position.getCol() + 1);
+                        Position left = new Position(position.getRow(), position.getCol() - 1);
+                        if (isValidPosition(left.getRow(),left.getCol()) && isProtectedSquare(board, left, isWhite) > 0) {
+                            int nbDeff = areDeffendersValid(board,left,isWhite);
+                            le = nbDeff >= isProtectedSquare(board, left, !isWhite);
+                            if(le)
+                                return true;
+                        }
+                        if (isValidPosition(right.getRow(),right.getCol()) && isProtectedSquare(board, right, isWhite) > 0) {
+                            int nbDeff =areDeffendersValid(board,right,isWhite);
+                            re = nbDeff >= isProtectedSquare(board, right, !isWhite);
+                            if(re)
+                                return true;
+                        }
+                    }
+                    else {
+                        if (isProtectedSquare(board, new Position(position.getRow(), position.getCol() + 1), isWhite)
+                                >= isProtectedSquare(board, new Position(position.getRow(), position.getCol() + 1), !isWhite)
+                                && isValidPosition(position.getRow(), position.getCol() + 1))
+                            return true;
 
-                    return isProtectedSquare(board, new Position(position.getRow(), position.getCol() - 1), isWhite)
-                            >= isProtectedSquare(board, new Position(position.getRow(), position.getCol() - 1), !isWhite)
-                            && isValidPosition(position.getRow(), position.getCol() - 1);
+                        return isProtectedSquare(board, new Position(position.getRow(), position.getCol() - 1), isWhite)
+                                >= isProtectedSquare(board, new Position(position.getRow(), position.getCol() - 1), !isWhite)
+                                && isValidPosition(position.getRow(), position.getCol() - 1);
+                    }
                 }
             }
         }
@@ -360,11 +372,15 @@ public class Ai {
 
     private Position deffender(Board board, Position posTodeffend, boolean leftDeffender, boolean isWhite) {
         int direction = isWhite ? -1 : 1;
+        Position p;
         if (leftDeffender) {
-            return new Position(posTodeffend.getRow() + direction, posTodeffend.getCol() - 1);
+            p = new Position(posTodeffend.getRow() + direction, posTodeffend.getCol() - 1);
         } else {
-            return new Position(posTodeffend.getRow() + direction, posTodeffend.getCol() + 1);
+            p = new Position(posTodeffend.getRow() + direction, posTodeffend.getCol() + 1);
         }
+        if(isValidPosition(p.getRow(),p.getCol()))
+            return p;
+        return null;
     }
 
     private boolean unstopable(Board board, Position position, boolean isWhite) {
@@ -406,6 +422,8 @@ public class Ai {
             for(int col = 2; col < 6; col++){
                 if(col == 3 || col == 4){
                     bonus = 20;
+                }else {
+                    bonus=0;
                 }
                 Position posAct = new Position(row,col);
 
@@ -434,10 +452,33 @@ public class Ai {
 
 
     public int checkWeakSpots(Board board, boolean isWhite){
-        int score =0;
-        int row = isWhite ? 7 : 0;
+        int score = 0;
+        int row = isWhite ? 6 : 1;
+        int direction = isWhite ? 1 : -1;
 
-        List<Position> list = Main.getAllPawnsInRow(board, isWhite, row);
+        //score += (8 - Main.getAllPawnsInRow(board,isWhite,row).size())*-20;
+
+        for(int col = 0; col < 8 ; col++){
+            Position position = new Position(row,col);
+/*            if(board.getPawnAt(position)==null) {
+                score = Main.getAllPawnsInColumn(board, isWhite,leftBoarder,rightBoarder).size()*20;
+            }*/
+            if(isProtectedSquare(board,position,!isWhite)==0){
+                int rowPawn = position.getRow();
+                int leftBoarder = isValidPosition(rowPawn,position.getCol()-1) ?
+                        position.getCol()-1:position.getCol();
+
+                int rightBoarder = isValidPosition(rowPawn,position.getCol()+1) ?
+                        position.getCol()+1:position.getCol();
+
+                for(Position pawn : Main.getAllPawnsInColumn(board, isWhite,leftBoarder,rightBoarder)){
+                    score += isWhite ? pawn.getRow()*20 : (7-pawn.getRow())*20;
+                }
+
+            }
+        }
+        //score = (8 - Main.getAllPawnsInRow(board,isWhite,row-direction).size())*-10;
+/*        List<Position> list = Main.getAllPawnsInRow(board, isWhite, row);
 
         for(Position position : list) {
             if(board.getPawnAt(position)==null) {
@@ -456,7 +497,7 @@ public class Ai {
             if(isProtectedSquare(board,pos,isWhite)==0) {
                 score-=30;
             }
-        }
+        }*/
 
         return score;
     }
@@ -473,14 +514,38 @@ public class Ai {
             Position l = position.getForwardLeftPosition(direction);
             Position r = position.getForwardRightPosition(direction);
 
-            if(isProtectedSquare(board,f,isWhite) == isProtectedSquare(board,f,isWhite)
-                &&isProtectedSquare(board,l,isWhite) == isProtectedSquare(board,l,isWhite)
-                    && isProtectedSquare(board,r,isWhite) == isProtectedSquare(board,r,isWhite)){
-                score+=50;
+            if(board.getPawnAt(f)!=null) {
+                if (isProtectedSquare(board, f, isWhite) == isProtectedSquare(board, f, !isWhite)
+                        && isProtectedSquare(board, l, isWhite) == isProtectedSquare(board, l, !isWhite)
+                        && isProtectedSquare(board, r, isWhite) == isProtectedSquare(board, r, !isWhite)) {
+                    score += 50;
+                }
+            }
+            else{
+                if (isProtectedSquare(board, f, isWhite) == isProtectedSquare(board, f, !isWhite) +1
+                        && isProtectedSquare(board, l, isWhite) == isProtectedSquare(board, l, !isWhite)
+                        && isProtectedSquare(board, r, isWhite) == isProtectedSquare(board, r, !isWhite)) {
+                    score += 50;
+                }
             }
         }
 
         return score;
+    }
+
+    private int areDeffendersValid(Board board, Position f, boolean isWhite) {
+        int nbDeff = 2;
+        Position deffenderLeft = deffender(board, f, true, isWhite);
+        if(deffenderLeft == null)
+            nbDeff--;
+        Position deffenderRight = deffender(board, f, false, isWhite);
+        if(deffenderRight == null)
+            nbDeff--;
+        if (deffenderRight != null && isProtectedSquare(board, deffenderRight, isWhite) >= isProtectedSquare(board, deffenderRight, !isWhite))
+            nbDeff--;
+        if (deffenderLeft != null && isProtectedSquare(board, deffenderLeft, isWhite) >= isProtectedSquare(board, deffenderLeft, !isWhite))
+            nbDeff--;
+        return nbDeff;
     }
 
 }
