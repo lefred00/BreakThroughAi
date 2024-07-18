@@ -454,15 +454,15 @@ public class Ai {
     public int checkWeakSpots(Board board, boolean isWhite){
         int score = 0;
         int row = isWhite ? 6 : 1;
-        int direction = isWhite ? 1 : -1;
+        int lastRow = isWhite ? 7 : 0;
+        int counterEmptyRows = 0;
 
         //score += (8 - Main.getAllPawnsInRow(board,isWhite,row).size())*-20;
 
         for(int col = 0; col < 8 ; col++){
             Position position = new Position(row,col);
-/*            if(board.getPawnAt(position)==null) {
-                score = Main.getAllPawnsInColumn(board, isWhite,leftBoarder,rightBoarder).size()*20;
-            }*/
+
+            //verifie si il y a pas de positions non defendues avant la fin et dirige les pieces par la
             if(isProtectedSquare(board,position,!isWhite)==0){
                 int rowPawn = position.getRow();
                 int leftBoarder = isValidPosition(rowPawn,position.getCol()-1) ?
@@ -472,32 +472,22 @@ public class Ai {
                         position.getCol()+1:position.getCol();
 
                 for(Position pawn : Main.getAllPawnsInColumn(board, isWhite,leftBoarder,rightBoarder)){
-                    score += isWhite ? pawn.getRow()*50 : (7-pawn.getRow())*50;
+                    score += isWhite ? pawn.getRow()*30 : (7-pawn.getRow())*30;
                 }
-
             }
+
+            //verifie si il y a pas plusieures colonnes vides de suite
+            if(board.getPawnAt(new Position(lastRow,col))==null){
+                counterEmptyRows++;
+                if(counterEmptyRows>1){
+                    score+=30*counterEmptyRows;
+                }
+            }
+            else{
+                counterEmptyRows=0;
+            }
+
         }
-        //score = (8 - Main.getAllPawnsInRow(board,isWhite,row-direction).size())*-10;
-/*        List<Position> list = Main.getAllPawnsInRow(board, isWhite, row);
-
-        for(Position position : list) {
-            if(board.getPawnAt(position)==null) {
-                int rowPawn = position.getRow();
-                int leftBoarder = isValidPosition(rowPawn,position.getCol()-1) ?
-                        position.getCol()-1:position.getCol();
-
-                int rightBoarder = isValidPosition(rowPawn,position.getCol()+1) ?
-                        position.getCol()+1:position.getCol();
-
-                score = Main.getAllPawnsInColumn(board, isWhite,leftBoarder,rightBoarder).size()*20;
-            }
-        }
-
-        for(Position pos : Main.getAllPawnsInRow(board,isWhite,row)){
-            if(isProtectedSquare(board,pos,isWhite)==0) {
-                score-=30;
-            }
-        }*/
 
         return score;
     }
