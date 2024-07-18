@@ -472,7 +472,7 @@ public class Ai {
                         position.getCol()+1:position.getCol();
 
                 for(Position pawn : Main.getAllPawnsInColumn(board, isWhite,leftBoarder,rightBoarder)){
-                    score += isWhite ? pawn.getRow()*20 : (7-pawn.getRow())*20;
+                    score += isWhite ? pawn.getRow()*50 : (7-pawn.getRow())*50;
                 }
 
             }
@@ -518,14 +518,14 @@ public class Ai {
                 if (isProtectedSquare(board, f, isWhite) == isProtectedSquare(board, f, !isWhite)
                         && isProtectedSquare(board, l, isWhite) == isProtectedSquare(board, l, !isWhite)
                         && isProtectedSquare(board, r, isWhite) == isProtectedSquare(board, r, !isWhite)) {
-                    score += 50;
+                    score += 200;
                 }
             }
             else{
                 if (isProtectedSquare(board, f, isWhite) == isProtectedSquare(board, f, !isWhite) +1
                         && isProtectedSquare(board, l, isWhite) == isProtectedSquare(board, l, !isWhite)
                         && isProtectedSquare(board, r, isWhite) == isProtectedSquare(board, r, !isWhite)) {
-                    score += 50;
+                    score += 200;
                 }
             }
         }
